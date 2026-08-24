@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_ROOT="/var/www/html"
+PROJECT_ROOT="${LANDO_MOUNT:-/app}"
 DRUSH="vendor/bin/drush"
 SETTINGS_FILE="web/sites/default/settings.php"
 FILES_DIR="web/sites/default/files"
 BOOTSTRAP_CSS="web/libraries/bootstrap/dist/css/bootstrap.min.css"
 BOOTSTRAP_JS="web/libraries/bootstrap/dist/js/bootstrap.bundle.min.js"
-THEME_INFO="web/themes/custom/voting_theme/voting_theme.info.yml"
+MODULE_NAME="drupal_simple_voting"
+MODULE_INFO="web/modules/custom/${MODULE_NAME}/${MODULE_NAME}.info.yml"
 CONFIG_SYNC_LINE="\$settings['config_sync_directory'] = '../config/sync';"
 DB_MAX_ATTEMPTS=60
 DB_RETRY_DELAY=2
 
-: "${DB_HOST:=db}"
+: "${DB_HOST:=database}"
 : "${DB_NAME:=drupal}"
 : "${DB_USER:=drupal}"
 : "${DB_PASSWORD:=drupal}"
@@ -20,8 +21,8 @@ DB_RETRY_DELAY=2
 : "${DRUPAL_ACCOUNT_NAME:=admin}"
 : "${DRUPAL_ACCOUNT_PASS:=admin}"
 : "${DRUPAL_ACCOUNT_MAIL:=admin@example.com}"
-: "${DRUPAL_INSTALL_PROFILE:=standard}"
-: "${DRUPAL_BASE_URL:=http://localhost:8081}"
+: "${DRUPAL_INSTALL_PROFILE:=minimal}"
+: "${DRUPAL_BASE_URL:=https://sistema-de-votacao.lndo.site}"
 : "${FORCE_INSTALL:=0}"
 
 log_step() {
@@ -94,13 +95,13 @@ if [ ! -f "$BOOTSTRAP_CSS" ] || [ ! -f "$BOOTSTRAP_JS" ]; then
   log_detail "Assets are missing, running the install-bootstrap-library script."
   composer run-script install-bootstrap-library
 fi
-[ -f "$BOOTSTRAP_CSS" ] || abort "Missing ${BOOTSTRAP_CSS}. The theme would load without Bootstrap and the browser would only report a silent 404."
-[ -f "$BOOTSTRAP_JS" ] || abort "Missing ${BOOTSTRAP_JS}. The theme would load without Bootstrap and the browser would only report a silent 404."
+[ -f "$BOOTSTRAP_CSS" ] || abort "Missing ${BOOTSTRAP_CSS}. The module would load without Bootstrap and the browser would only report a silent 404."
+[ -f "$BOOTSTRAP_JS" ] || abort "Missing ${BOOTSTRAP_JS}. The module would load without Bootstrap and the browser would only report a silent 404."
 log_detail "Bootstrap CSS and JS are in place."
 
-log_step "Verifying the custom theme"
-[ -f "$THEME_INFO" ] || abort "Missing ${THEME_INFO}."
-log_detail "voting_theme is present."
+log_step "Verifying the voting module"
+[ -f "$MODULE_INFO" ] || abort "Missing ${MODULE_INFO}."
+log_detail "${MODULE_NAME} is present."
 
 log_step "Preparing the site directories"
 mkdir -p "$FILES_DIR"
@@ -124,6 +125,16 @@ else
     --account-name="$DRUPAL_ACCOUNT_NAME" \
     --account-pass="$DRUPAL_ACCOUNT_PASS" \
     --account-mail="$DRUPAL_ACCOUNT_MAIL"
+fi
+
+log_step "Removing the node module"
+# The brief forbids node for the voting entities, but the minimal profile still installs it.
+# Removing it here is what keeps a clean-room install identical to the committed state.
+if "$DRUSH" pm:list --status=enabled --format=list 2>/dev/null | grep -qx 'node'; then
+  "$DRUSH" pm:uninstall node -y
+  log_detail "node uninstalled."
+else
+  log_detail "node is not installed, nothing to remove."
 fi
 
 append_setting_once() {
@@ -155,13 +166,20 @@ append_setting_once \
   "trusted_host_patterns"
 log_detail "Trusted hosts: ${trusted_host}, 127.0.0.1"
 
+log_step "Installing the voting module"
+"$DRUSH" pm:install "$MODULE_NAME" -y
+if "$DRUSH" pm:list --status=enabled --format=list 2>/dev/null | grep -qx "$MODULE_NAME"; then
+  log_detail "${MODULE_NAME} is enabled."
+else
+  abort "${MODULE_NAME} did not enable. The site would boot without the voting feature and its /polls front page."
+fi
+
 log_step "Installing and selecting the themes"
-"$DRUSH" theme:install voting_theme -y
+"$DRUSH" theme:install olivero -y
 "$DRUSH" theme:install gin -y
-"$DRUSH" config:set system.theme default voting_theme -y
+"$DRUSH" config:set system.theme default olivero -y
 "$DRUSH" config:set system.theme admin gin -y
 "$DRUSH" pm:install gin_toolbar -y
-"$DRUSH" config:set --input-format=yaml node.settings use_admin_theme true -y
 
 log_step "Rebuilding the caches"
 "$DRUSH" cache:rebuild
