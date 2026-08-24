@@ -18,6 +18,7 @@
   --vt-media-element-size: 80px;
   --vt-option-border-radius: 12px;
   --vt-option-gap: 16px;
+  --vt-filter-control-height: 38px;
   --vt-list-gap: 12px;
   --vt-danger: rgba(var(--vt-danger-color), 1);
   --vt-hairline: rgba(var(--vt-font-color), 0.12);

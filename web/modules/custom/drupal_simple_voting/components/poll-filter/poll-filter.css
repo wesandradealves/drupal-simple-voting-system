@@ -10,7 +10,7 @@
   display: grid;
   flex: 0 1 auto;
   gap: 4px;
-  min-width: 140px;
+  min-width: 132px;
 }
 
 .vt-filter__label {
@@ -19,28 +19,30 @@
   opacity: 0.75;
 }
 
+.vt-filter__select,
+.vt-filter__submit {
+  height: var(--vt-filter-control-height);
+  box-sizing: border-box;
+  border-radius: var(--vt-default-option-radius);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
 .vt-filter__select {
   max-width: 100%;
-  min-height: 40px;
-  padding: 4px 8px;
+  padding: 0 32px 0 10px;
   border: 1px solid var(--vt-option-border-color);
-  border-radius: var(--vt-default-option-radius);
   background-color: var(--vt-default-background-color);
   color: inherit;
-  font: inherit;
-  line-height: 1.4;
 }
 
 .vt-filter__submit {
-  min-height: 40px;
-  padding: 4px 16px;
+  padding: 0 16px;
   border: 1px solid transparent;
-  border-radius: var(--vt-default-option-radius);
   background-color: rgba(var(--vt-primary-color), 1);
   color: rgb(255, 255, 255);
-  font: inherit;
   font-weight: 600;
-  line-height: 1.4;
   cursor: pointer;
 }
 
