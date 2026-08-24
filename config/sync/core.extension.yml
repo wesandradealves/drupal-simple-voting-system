@@ -1,0 +1,26 @@
+_core:
+  default_config_hash: 4GIX5Esnc_umpXUBj4IIocRX7Mt5fPhm4AgXfE3E56E
+module:
+  block: 0
+  dblog: 0
+  drupal_simple_voting: 0
+  dynamic_page_cache: 0
+  field: 0
+  file: 0
+  filter: 0
+  gin_toolbar: 0
+  image: 0
+  mysql: 0
+  page_cache: 0
+  path_alias: 0
+  system: 0
+  text: 0
+  update: 0
+  user: 0
+  minimal: 1000
+theme:
+  stark: 0
+  olivero: 0
+  claro: 0
+  gin: 0
+profile: minimal

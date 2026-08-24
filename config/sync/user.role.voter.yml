@@ -1,0 +1,15 @@
+uuid: 20e0e366-2d79-4e21-88a6-008e0b034c4e
+langcode: en
+status: true
+dependencies:
+  module:
+    - drupal_simple_voting
+    - system
+id: voter
+label: Voter
+weight: 3
+is_admin: false
+permissions:
+  - 'access content'
+  - 'view poll results'
+  - 'vote in polls'

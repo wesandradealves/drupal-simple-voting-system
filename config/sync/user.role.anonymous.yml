@@ -1,0 +1,14 @@
+uuid: 8aefebe3-cee6-4a89-b80c-6c30c92ecbbc
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+_core:
+  default_config_hash: j5zLMOdJBqC0bMvSdth5UebkprJB8g_2FXHqhfpJzow
+id: anonymous
+label: 'Anonymous user'
+weight: 0
+is_admin: false
+permissions:
+  - 'access content'
