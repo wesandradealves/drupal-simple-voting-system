@@ -79,14 +79,28 @@ function drupal_simple_voting_install_role(): void {
 /**
  * Lets visitors register, so anyone reaching the login screen can get a ballot.
  *
- * hook_user_insert() gives every new account the voting role, which is why
+ * hook_user_presave() gives every new account the voting role, which is why
  * opening registration is enough to put a visitor into the voting flow.
+ *
+ * Mail verification is turned off with it. Left on, Drupal hides the password
+ * field and mails a one-time login link instead: this stack has no mail
+ * transport, so the account would be created and immediately unreachable. With
+ * it off the visitor picks a password on the form, the account is active at
+ * once, and voting is one click away.
  */
 function drupal_simple_voting_open_registration(): void {
   $settings = \Drupal::configFactory()->getEditable('user.settings');
+  $state = \Drupal::state();
 
-  \Drupal::state()->set('drupal_simple_voting.previous_register', (string) $settings->get('register'));
-  $settings->set('register', 'visitors')->save();
+  $state->set('drupal_simple_voting.previous_register', (string) $settings->get('register'));
+  $state->set('drupal_simple_voting.previous_verify_mail', (bool) $settings->get('verify_mail'));
+  $state->set('drupal_simple_voting.previous_register_notice', (bool) $settings->get('notify.register_no_approval_required'));
+
+  $settings
+    ->set('register', 'visitors')
+    ->set('verify_mail', FALSE)
+    ->set('notify.register_no_approval_required', FALSE)
+    ->save();
 }
 
 /**
@@ -131,9 +145,15 @@ function drupal_simple_voting_uninstall(): void {
 
   $settings = \Drupal::configFactory()->getEditable('user.settings');
   if ((string) $settings->get('register') === 'visitors') {
-    $settings->set('register', $state->get('drupal_simple_voting.previous_register') ?: 'admin_only')->save();
+    $settings
+      ->set('register', $state->get('drupal_simple_voting.previous_register') ?: 'admin_only')
+      ->set('verify_mail', $state->get('drupal_simple_voting.previous_verify_mail') ?? TRUE)
+      ->set('notify.register_no_approval_required', $state->get('drupal_simple_voting.previous_register_notice') ?? TRUE)
+      ->save();
   }
   $state->delete('drupal_simple_voting.previous_register');
+  $state->delete('drupal_simple_voting.previous_verify_mail');
+  $state->delete('drupal_simple_voting.previous_register_notice');
 
   drupal_simple_voting_remove_placed_blocks();
 
