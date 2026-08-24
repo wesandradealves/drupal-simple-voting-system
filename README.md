@@ -62,7 +62,11 @@ public network.
 The site has three roles — `anonymous`, `authenticated` and `voter`. The `voter` role is the **only** one
 allowed to cast a ballot (`authenticated` has that permission revoked on install). It grants no admin access.
 Registration is open, and every new account gets the `voter` role automatically, so any visitor who registers
-can vote.
+can vote. The `/user/register` form asks for a username, an email and a password (typed twice); on submit the
+account is created **active**, the visitor is **logged in immediately** and taken to the front page, and no email
+is sent. Email verification is deliberately **off**: when it is on, Drupal hides the password field and emails a
+one-time login link instead, and since this local stack has no mail transport those accounts ended up created but
+unreachable. Registration's "welcome" notification is silenced for the same reason.
 
 ## Seeded content
 
@@ -84,7 +88,7 @@ by. Two states are seeded on purpose so both configurations are visible to a rev
 | `/polls` | Poll index — **this is the site front page** | Anyone |
 | `/poll/{id}` | The ballot, or the result once you have voted (per the poll's policy) | Anyone can view; only the `voter` role casts |
 | `/user/login?destination=/poll/{id}` | Visitor flow: an anonymous click on a poll lands here, then returns to that poll after login | Anonymous |
-| `/user/register` | Open registration; the new account receives the `voter` role and can vote immediately | Anonymous |
+| `/user/register` | Open registration; the account is created active, logged in on submit and given the `voter` role, so it can vote immediately | Anonymous |
 
 ## Filtering and sorting the poll list
 
@@ -261,8 +265,9 @@ respects it:
 1. **Delete the content first** — the links Drupal offers at `/admin/modules/uninstall`.
 2. **Uninstall `drupal_simple_voting`.**
 
-On uninstall the module reverts everything it set up: it restores the previous front page and registration
-setting, removes the `voter` role, deletes the demo account and the seed voters, and removes every placed
+On uninstall the module reverts everything it set up: it restores the previous front page and the previous
+registration settings — registration mode, email verification and the "welcome" notification, all saved to state
+at install — removes the `voter` role, deletes the demo account and the seed voters, and removes every placed
 *Poll list* block. After that, `/polls`, `/docs`, `/docs/openapi.json` and `/api/v1/polls` all return `404`.
 
 ---
