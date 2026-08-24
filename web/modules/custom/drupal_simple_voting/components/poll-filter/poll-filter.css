@@ -1,0 +1,60 @@
+.vt-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: var(--vt-option-gap);
+}
+
+.vt-filter__field {
+  display: grid;
+  flex: 0 1 auto;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.vt-filter__label {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+.vt-filter__select {
+  max-width: 100%;
+  min-height: 40px;
+  padding: 4px 8px;
+  border: 1px solid var(--vt-option-border-color);
+  border-radius: var(--vt-default-option-radius);
+  background-color: var(--vt-default-background-color);
+  color: inherit;
+  font: inherit;
+  line-height: 1.4;
+}
+
+.vt-filter__submit {
+  min-height: 40px;
+  padding: 4px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--vt-default-option-radius);
+  background-color: rgba(var(--vt-primary-color), 1);
+  color: rgb(255, 255, 255);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.vt-filter__submit:hover,
+.vt-filter__submit:focus-visible {
+  background-color: rgba(var(--vt-primary-color), 0.85);
+}
+
+@container (max-width: 420px) {
+  .vt-filter {
+    justify-content: stretch;
+  }
+  .vt-filter__field,
+  .vt-filter__submit {
+    flex: 1 1 100%;
+  }
+}

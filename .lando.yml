@@ -76,10 +76,10 @@ tooling:
     service: appserver
     description: Compile every stylesheet the module ships
     dir: /app/web/modules/custom/drupal_simple_voting
-    cmd: sass --no-source-map --style=expanded scss/voting.scss:css/voting.css scss/admin.scss:css/admin.css components/ballot/ballot.scss:components/ballot/ballot.css components/ballot-option/ballot-option.scss:components/ballot-option/ballot-option.css components/poll-card/poll-card.scss:components/poll-card/poll-card.css components/vote-status/vote-status.scss:components/vote-status/vote-status.css
+    cmd: sass --no-source-map --style=expanded scss/voting.scss:css/voting.css scss/admin.scss:css/admin.css components/ballot/ballot.scss:components/ballot/ballot.css components/ballot-option/ballot-option.scss:components/ballot-option/ballot-option.css components/poll-card/poll-card.scss:components/poll-card/poll-card.css components/poll-filter/poll-filter.scss:components/poll-filter/poll-filter.css components/vote-status/vote-status.scss:components/vote-status/vote-status.css
 
   sass:watch:
     service: appserver
     description: Recompile the module stylesheets on every change
     dir: /app/web/modules/custom/drupal_simple_voting
-    cmd: sass --watch --poll --no-source-map --style=expanded scss/voting.scss:css/voting.css scss/admin.scss:css/admin.css components/ballot/ballot.scss:components/ballot/ballot.css components/ballot-option/ballot-option.scss:components/ballot-option/ballot-option.css components/poll-card/poll-card.scss:components/poll-card/poll-card.css components/vote-status/vote-status.scss:components/vote-status/vote-status.css
+    cmd: sass --watch --poll --no-source-map --style=expanded scss/voting.scss:css/voting.css scss/admin.scss:css/admin.css components/ballot/ballot.scss:components/ballot/ballot.css components/ballot-option/ballot-option.scss:components/ballot-option/ballot-option.css components/poll-card/poll-card.scss:components/poll-card/poll-card.css components/poll-filter/poll-filter.scss:components/poll-filter/poll-filter.css components/vote-status/vote-status.scss:components/vote-status/vote-status.css

@@ -2,6 +2,7 @@
   display: grid;
   gap: var(--vt-list-gap);
   max-width: 720px;
+  container-type: inline-size;
 }
 
 .vt-poll-card {

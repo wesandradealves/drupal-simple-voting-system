@@ -1,0 +1,20 @@
+<form class="vt-filter" method="get" action="{{ action }}">
+  <label class="vt-filter__field">
+    <span class="vt-filter__label">{{ 'Status'|t }}</span>
+    <select class="vt-filter__select" name="status">
+      <option value="all"{{ status == 'all' ? ' selected' }}>{{ 'All polls'|t }}</option>
+      <option value="open"{{ status == 'open' ? ' selected' }}>{{ 'Open'|t }}</option>
+      <option value="closed"{{ status == 'closed' ? ' selected' }}>{{ 'Closed'|t }}</option>
+    </select>
+  </label>
+
+  <label class="vt-filter__field">
+    <span class="vt-filter__label">{{ 'Order'|t }}</span>
+    <select class="vt-filter__select" name="sort">
+      <option value="newest"{{ sort == 'newest' ? ' selected' }}>{{ 'Newest first'|t }}</option>
+      <option value="oldest"{{ sort == 'oldest' ? ' selected' }}>{{ 'Oldest first'|t }}</option>
+    </select>
+  </label>
+
+  <button class="vt-filter__submit" type="submit">{{ 'Apply'|t }}</button>
+</form>

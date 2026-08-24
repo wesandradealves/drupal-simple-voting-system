@@ -33,6 +33,7 @@ services:
       - '@drupal_simple_voting.policy'
       - '@drupal_simple_voting.ballot_box'
       - '@config.factory'
+      - '@request_stack'
   Drupal\drupal_simple_voting\PollIndex: '@drupal_simple_voting.poll_index'
 
   drupal_simple_voting.serializer:

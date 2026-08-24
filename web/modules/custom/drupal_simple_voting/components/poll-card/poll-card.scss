@@ -2,6 +2,9 @@
   display: grid;
   gap: var(--vt-list-gap);
   max-width: 720px;
+  // The listing is placeable in any region, so its own width — not the
+  // viewport — is what the filter controls respond to.
+  container-type: inline-size;
 }
 
 .vt-poll-card {

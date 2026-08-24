@@ -1,0 +1,22 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Poll filter
+status: stable
+description: The status and ordering controls that sit above a poll listing.
+props:
+  type: object
+  required:
+    - action
+    - status
+    - sort
+  properties:
+    action:
+      type: string
+      title: Where the form submits, so the listing keeps its own path
+    status:
+      type: string
+      title: Which status is selected
+      enum: [all, open, closed]
+    sort:
+      type: string
+      title: Which ordering is selected
+      enum: [newest, oldest]
