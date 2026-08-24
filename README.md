@@ -26,19 +26,21 @@ lando install    # install/repair the site (idempotent — safe to re-run)
 `scripts/install.sh` (behind `lando install`) does, in order:
 
 1. waits for MariaDB to accept connections;
-2. installs Composer dependencies and verifies the vendored Swagger UI assets and the module's
-   `.info.yml` are present (aborts with a clear message otherwise);
-3. installs Drupal with the **`minimal`** profile (skips if already installed);
-4. **uninstalls `node`** — the domain uses custom content entities, so core's node module is not wanted;
-5. declares the `config/sync` directory in `settings.php`;
-6. enables `drupal_simple_voting`;
-7. installs and selects **Olivero** (default theme) and **Gin** (admin theme);
-8. installs the core modules the `minimal` profile leaves out —
+2. installs Composer dependencies and verifies the module's `.info.yml` is present (aborts with a clear
+   message otherwise);
+3. creates the site's files directory (`web/sites/default/files`) and makes it writable;
+4. installs Drupal with the **`minimal`** profile (skips if already installed);
+5. **uninstalls `node`** — the domain uses custom content entities, so core's node module is not wanted;
+6. declares the `config/sync` directory in `settings.php`;
+7. declares `trusted_host_patterns` in `settings.php` (the site host plus `127.0.0.1`);
+8. enables `drupal_simple_voting`;
+9. installs and selects **Olivero** (default theme) and **Gin** (admin theme);
+10. installs the core modules the `minimal` profile leaves out —
    `field_ui views views_ui menu_ui menu_link_content block_content path config contextual help options datetime link editor ckeditor5 big_pipe automated_cron announcements_feed` —
    the `standard` profile's module set **minus `node` and `taxonomy`** (`node` because the brief forbids it,
    `taxonomy` because it depends on `node` and would drag it back in). Without them the administration has no
    Views, no field UI, no menu management and no block types. Then enables **`gin_toolbar`**;
-9. rebuilds caches and prints a one-time login link (`drush user:login`).
+11. rebuilds caches and prints a one-time login link (`drush user:login`).
 
 ## Database dump
 
