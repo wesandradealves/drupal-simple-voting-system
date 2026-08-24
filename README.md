@@ -66,8 +66,9 @@ can vote.
 
 ## Seeded content
 
-8 polls · 35 image options · 80 ballots, drawn from real Drupal community surveys and forum threads. Two
-states are seeded on purpose so both configurations are visible to a reviewer:
+8 polls · 35 image options · 80 ballots, drawn from real Drupal community surveys and forum threads. Their
+creation dates are staggered a day apart, so the listing's Newest/Oldest ordering has distinct dates to sort
+by. Two states are seeded on purpose so both configurations are visible to a reviewer:
 
 - **One closed poll** — *"Which admin theme should be Drupal's default: Gin or Claro?"*. It is seeded open,
   collects its ballots and is closed afterwards, the way a real poll runs: it refuses every new vote yet still
@@ -84,6 +85,36 @@ states are seeded on purpose so both configurations are visible to a reviewer:
 | `/poll/{id}` | The ballot, or the result once you have voted (per the poll's policy) | Anyone can view; only the `voter` role casts |
 | `/user/login?destination=/poll/{id}` | Visitor flow: an anonymous click on a poll lands here, then returns to that poll after login | Anonymous |
 | `/user/register` | Open registration; the new account receives the `voter` role and can vote immediately | Anonymous |
+
+## Filtering and sorting the poll list
+
+The poll listing — the `/polls` page and the **Poll list** block alike — carries a filter bar above the cards,
+aligned to the right. It is a plain **GET form**: two selects and an **Apply** button, working with JavaScript
+switched off, with the current choice living in the URL.
+
+| Control | Options | Query arg |
+| --- | --- | --- |
+| **Status** | All polls · Open · Closed | `status=all\|open\|closed` |
+| **Order** | Newest first · Oldest first | `sort=newest\|oldest` |
+
+- **Reader-driven order.** Sorting is by the question's creation date and belongs to the reader alone — the list
+  no longer floats open polls to the top by default, since that would override the chosen direction. To see only
+  the open ones, use the **Status** select.
+- **Deterministic ties.** Two polls created in the same second break the tie by `id` in the same direction, so
+  the order never comes back shuffled.
+- **Validated input.** Unknown values in the URL fall back to the defaults (`status=all`, `sort=newest`); both
+  are checked against an allowlist in PHP.
+- **The pager keeps the filter.** Page links carry `status` and `sort` along, so paging never drops the view.
+- **Empty states.** When the filter matches nothing the list says *"No poll matches this filter."*; when there
+  is no poll at all it still says *"There are no polls yet."*.
+
+`PollIndex` (the shared `drupal_simple_voting.poll_index` service) applies all of this, so the page and the block
+behave identically, and the bar itself is a new SDC component, `components/poll-filter/`. Two cache contexts —
+`url.query_args:status` and `url.query_args:sort` — cache each filtered view on its own.
+
+The bar is responsive through a container query on `.vt-polls` (`container-type: inline-size`): in a wide list
+the three controls sit on one right-aligned row; in a narrow sidebar each takes the full width — no overflow and
+no horizontal scroll either way.
 
 ## Admin pages
 
@@ -111,6 +142,9 @@ description and an Open/Closed state — and applies the same access rule from a
 - **Settings** — Drupal's standard **Title** / **Display title**, plus **Polls per page** (a number, 0–100,
   default 5). Polls beyond that count fall behind the block's own pager; **`0` lists every poll and hides the
   pager.**
+- **Filter in place** — the filter bar appears on the block too (see *Filtering and sorting the poll list*). Its
+  GET form submits to the current path (`$request->getPathInfo()`), so filtering a block in a sidebar reloads
+  that same page with the block filtered, instead of sending the reader off to `/polls`.
 - **Narrow regions** — the pager is restyled to fit a slim column: `scss/base/_pager.scss` shrinks core's pager
   down to a sidebar width.
 
@@ -210,7 +244,7 @@ postman/simple-voting.postman_environment.json --insecure`.
 ## Presentation — Single Directory Components
 
 The UI is built entirely from SDC, under `components/`: `poll-card`, `ballot`, `ballot-option`,
-`vote-status`. Each folder holds its own `.component.yml` (prop schema), `.twig`, `.scss` and compiled `.css`
+`vote-status`, `poll-filter`. Each folder holds its own `.component.yml` (prop schema), `.twig`, `.scss` and compiled `.css`
 — Drupal attaches each component's CSS on its own. There is no `templates/` directory and no `hook_theme()`.
 
 Design tokens are literals in `scss/tokens/primitives/` (`_color`, `_space`, `_shape`, `_typography`,
