@@ -2,7 +2,7 @@ name: Simple Voting
 type: module
 description: 'Polls with image options and one vote per user per question, enforced by a database constraint.'
 package: Custom
-version: '1.3.0'
+version: '1.4.0'
 core_version_requirement: ^11
 configure: drupal_simple_voting.settings
 dependencies:
