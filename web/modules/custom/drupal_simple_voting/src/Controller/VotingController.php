@@ -6,8 +6,8 @@ namespace Drupal\drupal_simple_voting\Controller;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Url;
 use Drupal\drupal_simple_voting\BallotBox;
+use Drupal\drupal_simple_voting\PollIndex;
 use Drupal\drupal_simple_voting\Form\BallotForm;
 use Drupal\drupal_simple_voting\VoteTally;
 use Drupal\drupal_simple_voting\VotingOptionInterface;
@@ -24,6 +24,7 @@ final class VotingController extends ControllerBase {
     private readonly VotingPolicy $policy,
     private readonly VoteTally $tally,
     private readonly BallotBox $ballotBox,
+    private readonly PollIndex $pollIndex,
   ) {}
 
   /**
@@ -34,6 +35,7 @@ final class VotingController extends ControllerBase {
       $container->get('drupal_simple_voting.policy'),
       $container->get('drupal_simple_voting.tally'),
       $container->get('drupal_simple_voting.ballot_box'),
+      $container->get('drupal_simple_voting.poll_index'),
     );
   }
 
@@ -43,64 +45,9 @@ final class VotingController extends ControllerBase {
 
   /**
    * Public index of the questions.
-   *
-   * No tally here: it would reveal the result of questions configured to
-   * hide it.
    */
   public function index(): array {
-    $storage = $this->entityTypeManager()->getStorage('voting_question');
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->sort('status', 'DESC')
-      ->sort('created', 'DESC')
-      ->execute();
-
-    $questions = $storage->loadMultiple($ids);
-    $account = $this->currentUser();
-
-    $build = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['vt-polls']],
-      '#attached' => ['library' => ['drupal_simple_voting/drupal_simple_voting']],
-      '#cache' => [
-        'contexts' => ['user'],
-        'tags' => array_merge(
-          $this->entityTypeManager()->getDefinition('voting_question')->getListCacheTags(),
-          $this->entityTypeManager()->getDefinition('voting_option')->getListCacheTags(),
-          $this->config(VotingPolicy::SETTINGS)->getCacheTags(),
-        ),
-      ],
-    ];
-
-    foreach ($questions as $question) {
-      if (!$question instanceof VotingQuestionInterface) {
-        continue;
-      }
-      $build[$question->id()] = [
-        '#type' => 'component',
-        '#component' => 'drupal_simple_voting:poll-card',
-        '#props' => [
-          'title' => $question->getTitle(),
-          'description' => (string) $question->getDescription(),
-          'url' => $this->cardUrl($question),
-          'open' => $this->policy->isOpen($question),
-          'voted' => $this->ballotBox->findVote($question, $account) !== NULL,
-        ],
-      ];
-    }
-
-    if ($questions === []) {
-      $build['empty'] = [
-        '#type' => 'component',
-        '#component' => 'drupal_simple_voting:vote-status',
-        '#props' => [
-          'state' => 'empty',
-          'message' => (string) $this->t('There are no polls yet.'),
-        ],
-      ];
-    }
-
-    return $build;
+    return $this->pollIndex->build($this->currentUser());
   }
 
   /**
@@ -135,6 +82,36 @@ final class VotingController extends ControllerBase {
   }
 
   /**
+   * What the result screen announces.
+   *
+   * The result is also what a reader who never voted sees once a poll closes,
+   * so the announcement has to describe that situation instead of claiming a
+   * ballot they never cast.
+   *
+   * @return array<string, string>
+   */
+  private function resultNotice(VotingQuestionInterface $question, ?int $chosen): array {
+    if ($chosen !== NULL) {
+      return [
+        'state' => 'voted',
+        'message' => (string) $this->t('Your vote was recorded.'),
+      ];
+    }
+
+    if (!$this->policy->isOpen($question)) {
+      return [
+        'state' => 'closed',
+        'message' => (string) $this->t('This poll is closed.'),
+      ];
+    }
+
+    return [
+      'state' => 'open',
+      'message' => (string) $this->t('You are not allowed to vote in this poll.'),
+    ];
+  }
+
+  /**
    * @param array<int, array<string, mixed>> $options
    */
   private function buildResults(VotingQuestionInterface $question, array $options, ?int $chosen): array {
@@ -160,10 +137,7 @@ final class VotingController extends ControllerBase {
     $build['status'] = [
       '#type' => 'component',
       '#component' => 'drupal_simple_voting:vote-status',
-      '#props' => [
-        'state' => 'voted',
-        'message' => (string) $this->t('Your vote was recorded.'),
-      ],
+      '#props' => $this->resultNotice($question, $chosen),
     ];
 
     $build['options'] = ['#type' => 'container'];
@@ -248,22 +222,5 @@ final class VotingController extends ControllerBase {
     ];
   }
 
-
-  /**
-   * Where a card sends the reader.
-   *
-   * An anonymous reader is sent to the login screen carrying the poll as the
-   * destination, so signing in or registering lands them on the question they
-   * clicked instead of on the front page.
-   */
-  private function cardUrl(VotingQuestionInterface $question): string {
-    $ballot = $question->toUrl()->toString();
-
-    if (!$this->currentUser()->isAnonymous()) {
-      return $ballot;
-    }
-
-    return Url::fromRoute('user.login', [], ['query' => ['destination' => $ballot]])->toString();
-  }
 
 }

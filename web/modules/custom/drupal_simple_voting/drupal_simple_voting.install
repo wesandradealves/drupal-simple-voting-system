@@ -135,10 +135,31 @@ function drupal_simple_voting_uninstall(): void {
   }
   $state->delete('drupal_simple_voting.previous_register');
 
+  drupal_simple_voting_remove_placed_blocks();
+
   \Drupal::classResolver(PollSeeder::class)->removeSeededAccounts();
 
   $role = \Drupal::entityTypeManager()->getStorage('user_role')->load(PollSeeder::VOTER_ROLE);
   if ($role instanceof Role) {
     $role->delete();
+  }
+}
+
+/**
+ * Deletes every placement of the poll list block.
+ *
+ * Config dependencies already remove them, but doing it here states the
+ * intent and keeps the module responsible for everything it put on the site.
+ */
+function drupal_simple_voting_remove_placed_blocks(): void {
+  if (!\Drupal::moduleHandler()->moduleExists('block')) {
+    return;
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('block');
+  $blocks = $storage->loadByProperties(['plugin' => 'drupal_simple_voting_poll_list']);
+
+  if ($blocks !== []) {
+    $storage->delete($blocks);
   }
 }

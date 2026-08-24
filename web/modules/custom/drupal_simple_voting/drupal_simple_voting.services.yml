@@ -26,6 +26,15 @@ services:
     arguments: ['@config.factory', '@entity_type.manager']
   Drupal\drupal_simple_voting\VotingPolicy: '@drupal_simple_voting.policy'
 
+  drupal_simple_voting.poll_index:
+    class: Drupal\drupal_simple_voting\PollIndex
+    arguments:
+      - '@entity_type.manager'
+      - '@drupal_simple_voting.policy'
+      - '@drupal_simple_voting.ballot_box'
+      - '@config.factory'
+  Drupal\drupal_simple_voting\PollIndex: '@drupal_simple_voting.poll_index'
+
   drupal_simple_voting.serializer:
     class: Drupal\drupal_simple_voting\PollSerializer
     arguments:
