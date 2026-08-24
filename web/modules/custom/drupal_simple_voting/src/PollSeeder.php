@@ -9,6 +9,7 @@ use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\file\FileInterface;
 use Drupal\user\Entity\User;
@@ -39,11 +40,20 @@ final class PollSeeder implements ContainerInjectionInterface {
    */
   private const PREFERENCE = [0, 1, 0, 2, 0, 1, 3, 0, 1, 2, 0, 4];
 
+  /**
+   * How far apart the sample polls are created.
+   *
+   * They would otherwise share one timestamp, and a listing ordered by date
+   * would have nothing to order by.
+   */
+  private const SPACING = 86400;
+
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly FileSystemInterface $fileSystem,
     private readonly ModuleExtensionList $moduleList,
     private readonly StateInterface $state,
+    private readonly TimeInterface $time,
   ) {}
 
   public static function create(ContainerInterface $container): static {
@@ -52,6 +62,7 @@ final class PollSeeder implements ContainerInjectionInterface {
       $container->get('file_system'),
       $container->get('extension.list.module'),
       $container->get('state'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -146,7 +157,9 @@ final class PollSeeder implements ContainerInjectionInterface {
     $options = $this->entityTypeManager->getStorage('voting_option');
     $created = [];
 
-    foreach ($rows as $row) {
+    $now = $this->time->getRequestTime();
+
+    foreach ($rows as $index => $row) {
       $title = (string) ($row['title'] ?? '');
       if ($title === '' || $questions->loadByProperties(['title' => $title]) !== []) {
         continue;
@@ -160,6 +173,7 @@ final class PollSeeder implements ContainerInjectionInterface {
         // way a real one runs: a poll seeded as closed would refuse its own
         // sample votes and reach the reviewer with an empty result screen.
         'status' => TRUE,
+        'created' => $now - ((int) $index * self::SPACING),
       ]);
       $question->save();
 
