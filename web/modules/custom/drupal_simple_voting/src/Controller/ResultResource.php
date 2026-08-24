@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
- * Resultado de uma pergunta.
+ * Read-only endpoint for a single question result.
  */
 final class ResultResource extends ControllerBase {
 

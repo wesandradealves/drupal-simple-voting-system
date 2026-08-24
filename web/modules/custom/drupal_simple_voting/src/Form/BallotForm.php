@@ -59,7 +59,7 @@ final class BallotForm extends FormBase {
     array $ballot_options = [],
   ): array {
     if ($voting_question === NULL) {
-      throw new \InvalidArgumentException('BallotForm exige uma pergunta.');
+      throw new \InvalidArgumentException('BallotForm requires a question.');
     }
 
     $account = $this->currentUser();

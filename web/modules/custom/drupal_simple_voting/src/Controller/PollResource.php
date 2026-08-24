@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
- * Leitura de perguntas.
+ * Read-only endpoints for the questions.
  */
 final class PollResource extends ControllerBase {
 
