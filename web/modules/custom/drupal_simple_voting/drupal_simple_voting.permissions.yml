@@ -1,0 +1,12 @@
+vote in polls:
+  title: 'Vote in polls'
+  description: 'Cast one vote per open poll.'
+
+view poll results:
+  title: 'View poll results'
+  description: 'See the tally of a poll whose author chose to publish results.'
+
+administer polls:
+  title: 'Administer polls'
+  description: 'Create, edit and delete polls and their options, and change the site-wide voting settings.'
+  restrict access: TRUE

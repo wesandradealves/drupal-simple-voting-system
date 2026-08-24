@@ -1,0 +1,35 @@
+@use '../tokens' as p;
+
+:root {
+  --vt-primary-color: #{p.$brand-rgb};
+  --vt-font-color: #{p.$ink-rgb};
+  --vt-danger-color: #{p.$danger-rgb};
+
+  --vt-card-horizontal-padding: #{p.$space-6};
+  --vt-card-vertical-padding: #{p.$space-10};
+  --vt-default-item-gap: #{p.$space-6};
+
+  --vt-default-background-color: rgba(var(--vt-primary-color), 0.1);
+  --vt-hover-background-color: rgba(var(--vt-primary-color), 0.2);
+  --vt-selected-background-color: rgba(var(--vt-primary-color), 0.4);
+  --vt-selected-hover-background-color: rgba(var(--vt-primary-color), 0.5);
+  --vt-option-border-color: rgba(var(--vt-primary-color), 1);
+  --vt-chart-bar-color: rgba(var(--vt-primary-color), 0.7);
+  --vt-chart-bar-mine-color: rgba(var(--vt-primary-color), 1);
+
+  --vt-default-option-radius: #{p.$radius-option};
+  --vt-default-option-line-height: #{p.$line-option};
+  --vt-default-option-padding: #{p.$space-4} #{p.$space-6};
+
+  --vt-media-element-size: #{p.$media-size};
+  --vt-option-border-radius: #{p.$radius-media};
+  --vt-option-gap: #{p.$space-4};
+  --vt-list-gap: #{p.$space-3};
+
+  --vt-danger: rgba(var(--vt-danger-color), 1);
+  --vt-hairline: rgba(var(--vt-font-color), 0.12);
+
+  --vt-duration-bar: #{p.$duration-bar};
+  --vt-duration-reveal: #{p.$duration-reveal};
+  --vt-easing: #{p.$easing};
+}

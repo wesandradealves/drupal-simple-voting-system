@@ -1,0 +1,9 @@
+drupal_simple_voting.settings:
+  type: config_object
+  label: 'Voting settings'
+  constraints:
+    FullyValidatable: ~
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Voting is open site-wide'

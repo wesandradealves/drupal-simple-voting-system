@@ -1,0 +1,25 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Poll card
+status: stable
+description: One question as it appears on the index of open polls.
+props:
+  type: object
+  required:
+    - title
+    - url
+  properties:
+    title:
+      type: string
+      title: The question
+    description:
+      type: string
+      title: Optional supporting text
+    url:
+      type: string
+      title: Link to the ballot
+    open:
+      type: boolean
+      title: The question still accepts votes
+    voted:
+      type: boolean
+      title: The viewer already voted here

@@ -1,0 +1,10 @@
+<article class="vt-poll-card">
+  <div class="vt-poll-card__tags">
+    <span class="vt-poll-card__tag vt-poll-card__tag--{{ open ? 'open' : 'closed' }}">
+      {{ open ? 'Open'|t : 'Closed'|t }}
+    </span>
+    {% if voted %}<span class="vt-poll-card__tag vt-poll-card__tag--voted">{{ 'You voted'|t }}</span>{% endif %}
+  </div>
+  <h2 class="vt-poll-card__title"><a href="{{ url }}">{{ title }}</a></h2>
+  {% if description %}<p class="vt-poll-card__description">{{ description }}</p>{% endif %}
+</article>

@@ -1,0 +1,144 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Install and uninstall routines for the Voting module.
+ */
+
+use Drupal\Core\Url;
+use Drupal\drupal_simple_voting\PollSeeder;
+use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
+
+/**
+ * Implements hook_install().
+ *
+ * Everything the module turns on here is turned back off by hook_uninstall():
+ * the front page, the voting role, open registration, the demonstration
+ * account and the sample polls.
+ */
+function drupal_simple_voting_install(): void {
+  drupal_simple_voting_claim_front_page();
+  drupal_simple_voting_install_role();
+  drupal_simple_voting_open_registration();
+  drupal_simple_voting_install_demo_user();
+
+  \Drupal::classResolver(PollSeeder::class)->seed();
+
+  \Drupal::messenger()->addStatus(t('Voting is live at @url. Sign in as @user (password @user) to cast a ballot, or register a new account.', [
+    '@url' => Url::fromRoute('drupal_simple_voting.polls')->toString(),
+    '@user' => PollSeeder::DEMO_USER,
+  ]));
+}
+
+/**
+ * Points the site front page at the poll index, remembering the old value.
+ */
+function drupal_simple_voting_claim_front_page(): void {
+  $site = \Drupal::configFactory()->getEditable('system.site');
+
+  \Drupal::state()->set('drupal_simple_voting.previous_front_page', (string) $site->get('page.front'));
+  $site->set('page.front', '/polls')->save();
+}
+
+/**
+ * Creates the voting role and makes it the only one that may vote.
+ *
+ * Voting lives on its own role instead of on authenticated: an account without
+ * the role can read a poll and still not cast a ballot, which is what turns the
+ * access rule into something a reviewer can see rather than assume.
+ */
+function drupal_simple_voting_install_role(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('user_role');
+
+  $role = $storage->load(PollSeeder::VOTER_ROLE);
+  if (!$role instanceof Role) {
+    $role = $storage->create([
+      'id' => PollSeeder::VOTER_ROLE,
+      'label' => 'Voter',
+      'weight' => 3,
+    ]);
+  }
+
+  foreach (['access content', 'vote in polls', 'view poll results'] as $permission) {
+    $role->grantPermission($permission);
+  }
+  $role->save();
+
+  $authenticated = $storage->load('authenticated');
+  if ($authenticated instanceof Role) {
+    foreach (['vote in polls', 'view poll results'] as $permission) {
+      $authenticated->revokePermission($permission);
+    }
+    $authenticated->save();
+  }
+}
+
+/**
+ * Lets visitors register, so anyone reaching the login screen can get a ballot.
+ *
+ * hook_user_insert() gives every new account the voting role, which is why
+ * opening registration is enough to put a visitor into the voting flow.
+ */
+function drupal_simple_voting_open_registration(): void {
+  $settings = \Drupal::configFactory()->getEditable('user.settings');
+
+  \Drupal::state()->set('drupal_simple_voting.previous_register', (string) $settings->get('register'));
+  $settings->set('register', 'visitors')->save();
+}
+
+/**
+ * Creates the demonstration voter.
+ *
+ * The password is a development-only value: this stack is never exposed to a
+ * public network, and the account exists so a reviewer can exercise voting
+ * without signing in as the administrator.
+ */
+function drupal_simple_voting_install_demo_user(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('user');
+
+  if ($storage->loadByProperties(['name' => PollSeeder::DEMO_USER]) !== []) {
+    return;
+  }
+
+  $user = User::create([
+    'name' => PollSeeder::DEMO_USER,
+    'pass' => PollSeeder::DEMO_USER,
+    'mail' => PollSeeder::DEMO_USER . '@example.com',
+    'status' => 1,
+  ]);
+  $user->addRole(PollSeeder::VOTER_ROLE);
+  $user->save();
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Gives the site back what the module borrowed and takes the accounts, the
+ * role and the sample content away with it.
+ */
+function drupal_simple_voting_uninstall(): void {
+  $state = \Drupal::state();
+  $site = \Drupal::configFactory()->getEditable('system.site');
+
+  // Only give the front page back if nobody moved it in the meantime.
+  if ((string) $site->get('page.front') === '/polls') {
+    $site->set('page.front', $state->get('drupal_simple_voting.previous_front_page') ?: '/user/login')->save();
+  }
+  $state->delete('drupal_simple_voting.previous_front_page');
+
+  $settings = \Drupal::configFactory()->getEditable('user.settings');
+  if ((string) $settings->get('register') === 'visitors') {
+    $settings->set('register', $state->get('drupal_simple_voting.previous_register') ?: 'admin_only')->save();
+  }
+  $state->delete('drupal_simple_voting.previous_register');
+
+  \Drupal::classResolver(PollSeeder::class)->removeSeededAccounts();
+
+  $role = \Drupal::entityTypeManager()->getStorage('user_role')->load(PollSeeder::VOTER_ROLE);
+  if ($role instanceof Role) {
+    $role->delete();
+  }
+}

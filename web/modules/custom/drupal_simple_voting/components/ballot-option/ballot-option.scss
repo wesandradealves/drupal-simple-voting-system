@@ -1,0 +1,162 @@
+.vt-option {
+  display: flex;
+  gap: var(--vt-option-gap);
+  align-items: stretch;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vt-option__media {
+  display: flex;
+  position: relative;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: var(--vt-media-element-size);
+  border-radius: var(--vt-option-border-radius);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.vt-option__media img,
+.vt-option__media-object {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: none;
+}
+
+.vt-option__content {
+  position: relative;
+  flex: 1 0 0;
+  min-width: 0;
+  min-height: var(--vt-media-element-size);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--vt-option-gap);
+  padding: var(--vt-default-option-padding);
+  line-height: var(--vt-default-option-line-height);
+  border: 1px solid var(--vt-option-border-color);
+  border-radius: var(--vt-default-option-radius);
+  background-color: var(--vt-default-background-color);
+  color: inherit;
+  overflow: hidden;
+}
+
+.vt-option:not(.is-answered):not(.is-answered-chosen):hover .vt-option__content {
+  background-color: var(--vt-hover-background-color);
+}
+
+.vt-option:has(input:checked) .vt-option__content {
+  background-color: var(--vt-selected-background-color);
+}
+
+.vt-option:has(input:checked):hover .vt-option__content {
+  background-color: var(--vt-selected-hover-background-color);
+}
+
+.vt-option:has(input:focus-visible) .vt-option__content {
+  outline: 1px solid var(--vt-option-border-color);
+  outline-offset: 3px;
+}
+
+.vt-option__input,
+.vt-option input[type='radio'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.vt-option__bar {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  z-index: 0;
+  background-color: var(--vt-chart-bar-color);
+  animation: vt-barfill var(--vt-duration-bar);
+  transition: width var(--vt-duration-bar) var(--vt-easing);
+}
+
+.is-answered-chosen .vt-option__bar {
+  background-color: var(--vt-chart-bar-mine-color);
+}
+
+.vt-option__answer {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: break-spaces;
+  min-height: var(--vt-default-option-line-height);
+}
+
+.vt-option__answer .form-item,
+.vt-option__answer .js-form-item,
+.vt-option__answer .form-type-radio {
+  margin: 0;
+  padding: 0;
+}
+
+.vt-option__title {
+  font-weight: 600;
+}
+
+.vt-option__description {
+  opacity: 0.85;
+  font-size: 0.9375em;
+  line-height: 1.35;
+}
+
+.vt-option__stats {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  animation: vt-reveal var(--vt-duration-reveal);
+}
+
+.vt-option__percent {
+  display: block;
+  font-weight: 700;
+  font-size: 1.125em;
+}
+
+.vt-option__votes {
+  display: block;
+  opacity: 0.7;
+  font-size: 0.875em;
+}
+
+.is-answered,
+.is-answered-chosen {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-option__bar,
+  .vt-option__stats {
+    animation: none;
+    transition: none;
+  }
+}

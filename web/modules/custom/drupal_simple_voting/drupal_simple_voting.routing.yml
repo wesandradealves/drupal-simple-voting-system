@@ -1,0 +1,92 @@
+drupal_simple_voting.polls:
+  path: '/polls'
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\VotingController::index'
+    _title: 'Polls'
+  requirements:
+    _permission: 'access content'
+
+drupal_simple_voting.settings:
+  path: '/admin/config/voting'
+  defaults:
+    _form: '\Drupal\drupal_simple_voting\Form\VotingSettingsForm'
+    _title: 'Voting'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    _admin_route: TRUE
+
+# Declared here on purpose: RouteBuilder::rebuild() dispatches STATIC before
+# DYNAMIC on one collection, and EntityRouteProviderSubscriber skips a name it
+# already finds, so this replaces the _entity_view canonical route that
+# DefaultHtmlRouteProvider would otherwise build.
+entity.voting_question.canonical:
+  path: '/poll/{voting_question}'
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\VotingController::view'
+    _title_callback: '\Drupal\drupal_simple_voting\Controller\VotingController::title'
+  requirements:
+    _entity_access: 'voting_question.view'
+  options:
+    parameters:
+      voting_question:
+        type: 'entity:voting_question'
+
+drupal_simple_voting.api_polls:
+  path: '/api/v1/polls'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\PollResource::collection'
+  requirements:
+    _format: 'json'
+    _permission: 'access content'
+
+drupal_simple_voting.api_poll:
+  path: '/api/v1/polls/{uuid}'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\PollResource::item'
+  requirements:
+    _format: 'json'
+    _permission: 'access content'
+    uuid: '[0-9a-f-]{36}'
+
+drupal_simple_voting.api_results:
+  path: '/api/v1/polls/{uuid}/results'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\ResultResource::read'
+  requirements:
+    _format: 'json'
+    _permission: 'access content'
+    uuid: '[0-9a-f-]{36}'
+
+# _csrf_request_header_token is the same requirement rest and jsonapi use.
+# The service is core's access_check.header.csrf, and the token comes from /session/token.
+drupal_simple_voting.api_vote:
+  path: '/api/v1/polls/{uuid}/vote'
+  methods: [POST]
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\VoteResource::cast'
+  requirements:
+    _format: 'json'
+    _permission: 'vote in polls'
+    _csrf_request_header_token: 'TRUE'
+    uuid: '[0-9a-f-]{36}'
+
+drupal_simple_voting.docs:
+  path: '/docs'
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\DocsPage::render'
+    _title: 'Voting API'
+  requirements:
+    _permission: 'access content'
+
+drupal_simple_voting.openapi:
+  path: '/docs/openapi.json'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\drupal_simple_voting\Controller\DocsPage::spec'
+  requirements:
+    _format: 'json'
+    _permission: 'access content'

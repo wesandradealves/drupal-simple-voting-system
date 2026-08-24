@@ -1,0 +1,42 @@
+services:
+  _defaults:
+    autoconfigure: true
+
+  logger.channel.drupal_simple_voting:
+    parent: logger.channel_base
+    arguments: ['drupal_simple_voting']
+
+  drupal_simple_voting.audit:
+    class: Drupal\drupal_simple_voting\BallotAudit
+    arguments: ['@logger.channel.drupal_simple_voting']
+  Drupal\drupal_simple_voting\BallotAudit: '@drupal_simple_voting.audit'
+
+  drupal_simple_voting.ballot_box:
+    class: Drupal\drupal_simple_voting\BallotBox
+    arguments: ['@entity_type.manager', '@drupal_simple_voting.policy', '@drupal_simple_voting.audit']
+  Drupal\drupal_simple_voting\BallotBox: '@drupal_simple_voting.ballot_box'
+
+  drupal_simple_voting.tally:
+    class: Drupal\drupal_simple_voting\VoteTally
+    arguments: ['@database']
+  Drupal\drupal_simple_voting\VoteTally: '@drupal_simple_voting.tally'
+
+  drupal_simple_voting.policy:
+    class: Drupal\drupal_simple_voting\VotingPolicy
+    arguments: ['@config.factory', '@entity_type.manager']
+  Drupal\drupal_simple_voting\VotingPolicy: '@drupal_simple_voting.policy'
+
+  drupal_simple_voting.serializer:
+    class: Drupal\drupal_simple_voting\PollSerializer
+    arguments:
+      - '@entity_type.manager'
+      - '@drupal_simple_voting.tally'
+      - '@drupal_simple_voting.policy'
+      - '@drupal_simple_voting.ballot_box'
+      - '@file_url_generator'
+  Drupal\drupal_simple_voting\PollSerializer: '@drupal_simple_voting.serializer'
+
+  drupal_simple_voting.api_format:
+    class: Drupal\drupal_simple_voting\EventSubscriber\ApiFormatSubscriber
+    tags:
+      - { name: event_subscriber }

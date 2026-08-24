@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Hooks for the Voting module.
+ */
+
+use Drupal\drupal_simple_voting\PollSeeder;
+use Drupal\user\UserInterface;
+
+/**
+ * Implements hook_user_presave().
+ *
+ * Registration is open and every account that comes through it is here to
+ * vote, so the role is granted while the account is still being written.
+ * hook_user_insert() would run after the save and the change would be lost.
+ */
+function drupal_simple_voting_user_presave(UserInterface $account): void {
+  if (!$account->isNew() || $account->hasRole(PollSeeder::VOTER_ROLE)) {
+    return;
+  }
+
+  $role = \Drupal::entityTypeManager()->getStorage('user_role')->load(PollSeeder::VOTER_ROLE);
+  if ($role !== NULL) {
+    $account->addRole(PollSeeder::VOTER_ROLE);
+  }
+}
+
+/**
+ * Implements hook_gin_content_form_routes().
+ */
+function drupal_simple_voting_gin_content_form_routes(): array {
+  // The delete form is deliberately absent: gin.api.php states that not every
+  // content entity form route should take the edit layout, and names the
+  // delete form as the counter-example.
+  return [
+    'entity.voting_question.add_form',
+    'entity.voting_question.edit_form',
+  ];
+}

@@ -1,0 +1,7 @@
+#voting-api-docs .swagger-ui .topbar {
+  display: none;
+}
+
+#voting-api-docs .swagger-ui .information-container {
+  padding: 24px 0;
+}

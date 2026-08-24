@@ -1,0 +1,51 @@
+.vt-ballot {
+  display: grid;
+  gap: var(--vt-default-item-gap);
+  max-width: 720px;
+  padding: var(--vt-card-vertical-padding) var(--vt-card-horizontal-padding);
+  border: 1px solid var(--vt-hairline);
+  border-radius: var(--vt-option-border-radius);
+}
+
+.vt-ballot__description {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.vt-ballot__options,
+.vt-ballot__options *:has(> .vt-option) {
+  display: grid;
+  gap: var(--vt-list-gap);
+}
+
+.vt-ballot__options *:has(.vt-option) {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+
+.vt-ballot__options legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.vt-ballot__actions {
+  display: flex;
+  gap: var(--vt-option-gap);
+  align-items: center;
+}
+
+.vt-ballot__actions:empty {
+  display: none;
+}
+
+.vt-ballot__total {
+  margin: 0;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}

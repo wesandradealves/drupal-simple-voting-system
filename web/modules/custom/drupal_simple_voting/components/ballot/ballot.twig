@@ -1,0 +1,15 @@
+<div class="vt-ballot">
+  {% block status %}{% endblock %}
+  {% if question_description %}
+    <p class="vt-ballot__description">{{ question_description }}</p>
+  {% endif %}
+  <div class="vt-ballot__options">
+    {% block options %}{% endblock %}
+  </div>
+  <div class="vt-ballot__actions">
+    {% block actions %}{% endblock %}
+  </div>
+  {% if show_totals and total_votes %}
+    <p class="vt-ballot__total">{% trans %}1 vote in total{% plural total_votes %}@count votes in total{% endtrans %}</p>
+  {% endif %}
+</div>

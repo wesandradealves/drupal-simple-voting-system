@@ -1,0 +1,22 @@
+{% set state = answered ? (chosen ? 'is-answered-chosen' : 'is-answered') : '' %}
+{% set tag = answered ? 'div' : 'label' %}
+<{{ tag }} class="vt-option {{ state }}"{% if not answered and input_id %} for="{{ input_id }}"{% endif %}>
+  {% if image %}
+    <span class="vt-option__media">{{ image }}</span>
+  {% endif %}
+  <span class="vt-option__content">
+    {% if answered %}<span class="vt-option__bar" style="width:{{ percent|default(0) }}%"></span>{% endif %}
+    <span class="vt-option__answer">
+      {% block input %}{% endblock %}
+      <span class="vt-option__title">{{ title }}</span>
+      {% if description %}<span class="vt-option__description">{{ description }}</span>{% endif %}
+    </span>
+    {% if answered and show_totals %}
+      <span class="vt-option__stats">
+        <span class="vt-option__percent">{{ percent|default(0)|round }}%</span>
+        {% set tally = votes|default(0) %}
+        <span class="vt-option__votes">{% trans %}1 vote{% plural tally %}@count votes{% endtrans %}</span>
+      </span>
+    {% endif %}
+  </span>
+</{{ tag }}>

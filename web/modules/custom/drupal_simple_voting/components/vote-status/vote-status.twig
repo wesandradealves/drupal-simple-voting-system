@@ -1,0 +1,9 @@
+{% if message or action_url %}
+  {% set role = state == 'error' ? 'alert' : (state == 'voted' ? 'status' : null) %}
+  <div class="vt-status vt-status--{{ state }}"{% if role %} role="{{ role }}"{% endif %}>
+    {% if message %}<span class="vt-status__message">{{ message }}</span>{% endif %}
+    {% if action_url %}
+      <a class="vt-status__action" href="{{ action_url }}">{{ action_label|default('Log in'|t) }}</a>
+    {% endif %}
+  </div>
+{% endif %}

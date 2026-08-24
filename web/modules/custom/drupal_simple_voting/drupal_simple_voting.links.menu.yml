@@ -1,0 +1,27 @@
+drupal_simple_voting.polls:
+  title: 'Polls'
+  description: 'Vote in the open polls.'
+  menu_name: main
+  route_name: drupal_simple_voting.polls
+  weight: -10
+
+# The site runs without node, so /admin/content would otherwise render an empty
+# page: the collection needs a menu link there, not only the local task.
+entity.voting_question.collection:
+  title: 'Polls'
+  description: 'Create and manage polls.'
+  parent: system.admin_content
+  route_name: entity.voting_question.collection
+
+drupal_simple_voting.settings:
+  title: 'Voting'
+  description: 'Open or close voting site-wide.'
+  parent: system.admin_config_workflow
+  route_name: drupal_simple_voting.settings
+
+drupal_simple_voting.docs:
+  title: 'Voting API'
+  description: 'Browse and try the voting endpoints.'
+  parent: system.admin_config_workflow
+  route_name: drupal_simple_voting.docs
+  weight: 1

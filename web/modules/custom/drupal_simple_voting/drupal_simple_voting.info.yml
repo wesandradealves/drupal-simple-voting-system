@@ -1,0 +1,8 @@
+name: Voting
+type: module
+description: 'Polls with image options and one vote per user per question, enforced by a database constraint.'
+package: Custom
+core_version_requirement: ^11
+configure: drupal_simple_voting.settings
+dependencies:
+  - drupal:image

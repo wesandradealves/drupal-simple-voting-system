@@ -1,0 +1,30 @@
+drupal_simple_voting:
+  version: 1.0.0
+  css:
+    base:
+      /libraries/bootstrap/dist/css/bootstrap.min.css: { minified: true }
+    theme:
+      css/voting.css: {}
+  js:
+    /libraries/bootstrap/dist/js/bootstrap.bundle.min.js: { minified: true, attributes: { defer: true } }
+
+swagger:
+  version: 1.0.0
+  css:
+    base:
+      /libraries/swagger-ui/dist/swagger-ui.css: { minified: true }
+    theme:
+      css/docs.css: {}
+  js:
+    /libraries/swagger-ui/dist/swagger-ui-bundle.js: { minified: true }
+    js/docs.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+admin:
+  version: 1.0.0
+  css:
+    theme:
+      css/admin.css: {}

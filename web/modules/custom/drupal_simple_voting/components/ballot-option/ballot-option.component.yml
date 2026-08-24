@@ -1,0 +1,43 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Ballot option
+status: stable
+description: A single answer choice with thumbnail, title and short description.
+props:
+  type: object
+  required:
+    - option_id
+    - title
+  properties:
+    option_id:
+      type: [string, integer]
+      title: Option identifier
+    input_id:
+      type: string
+      title: DOM id of the radio input this row controls
+    title:
+      type: string
+      title: Option title
+    description:
+      type: string
+      title: Short description
+    image:
+      type: object
+      title: Rendered image render array
+    percent:
+      type: number
+      title: Share of votes, 0 to 100
+    votes:
+      type: integer
+      title: Absolute vote count
+    answered:
+      type: boolean
+      title: The viewer has already voted in this question
+    chosen:
+      type: boolean
+      title: This option is the vote the viewer cast
+    show_totals:
+      type: boolean
+      title: The question reveals vote counts
+slots:
+  input:
+    title: The radio input rendered by the Form API

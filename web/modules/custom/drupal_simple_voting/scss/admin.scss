@@ -1,0 +1,26 @@
+.voting-option-set {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.voting-option-set table {
+  width: 100%;
+}
+
+.voting-option-set td {
+  vertical-align: top;
+}
+
+.voting-option-set td .form-item,
+.voting-option-set td .js-form-item,
+.voting-option-set td .form-text,
+.voting-option-set td .form-textarea,
+.voting-option-set td input[type='text'],
+.voting-option-set td input[type='file'],
+.voting-option-set td textarea,
+.voting-option-set td details {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}

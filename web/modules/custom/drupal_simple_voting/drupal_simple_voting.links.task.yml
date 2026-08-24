@@ -1,0 +1,18 @@
+entity.voting_question.collection:
+  title: 'Polls'
+  route_name: entity.voting_question.collection
+  base_route: system.admin_content
+
+# Anchored on the edit form, not on the canonical route, so the public ballot
+# page at /poll/{voting_question} stays free of administrative tabs.
+entity.voting_question.edit_form:
+  title: 'Edit'
+  route_name: entity.voting_question.edit_form
+  base_route: entity.voting_question.edit_form
+  weight: 0
+
+entity.voting_question.delete_form:
+  title: 'Delete'
+  route_name: entity.voting_question.delete_form
+  base_route: entity.voting_question.edit_form
+  weight: 10

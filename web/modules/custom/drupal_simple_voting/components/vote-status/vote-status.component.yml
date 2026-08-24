@@ -1,0 +1,22 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Vote status
+status: stable
+description: One announcement slot for the ballot, never more than one at a time.
+props:
+  type: object
+  required:
+    - state
+  properties:
+    state:
+      type: string
+      title: Which state the ballot is in
+      enum: [open, voted, closed, anonymous, empty, error]
+    message:
+      type: string
+      title: The sentence shown to the reader
+    action_url:
+      type: string
+      title: Where the reader is sent to resolve this state
+    action_label:
+      type: string
+      title: The wording on the action
