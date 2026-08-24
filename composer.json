@@ -16,7 +16,6 @@
     ],
     "require": {
         "composer/installers": "^2.3",
-        "drupal/bootstrap_barrio": "^5.5",
         "drupal/core-composer-scaffold": "^11.4",
         "drupal/core-project-message": "^11.4",
         "drupal/core-recipe-unpack": "^11.4",
@@ -24,6 +23,7 @@
         "drupal/gin": "^5.0",
         "drupal/gin_toolbar": "^3.0",
         "drush/drush": "^13.7",
+        "swagger-api/swagger-ui": "^5.32",
         "twbs/bootstrap": "^5.3"
     },
     "conflict": {
@@ -50,10 +50,15 @@
             "mkdir -p web/libraries/bootstrap/dist && cp -R vendor/twbs/bootstrap/dist/. web/libraries/bootstrap/dist/"
         ],
         "post-install-cmd": [
-            "@install-bootstrap-library"
+            "@install-bootstrap-library",
+            "@install-swagger-ui-library"
         ],
         "post-update-cmd": [
-            "@install-bootstrap-library"
+            "@install-bootstrap-library",
+            "@install-swagger-ui-library"
+        ],
+        "install-swagger-ui-library": [
+            "mkdir -p web/libraries/swagger-ui/dist && cp -R vendor/swagger-api/swagger-ui/dist/. web/libraries/swagger-ui/dist/"
         ]
     },
     "extra": {
@@ -64,19 +69,42 @@
             }
         },
         "installer-paths": {
-            "web/core": ["type:drupal-core"],
-            "web/libraries/{$name}": ["type:drupal-library"],
-            "web/modules/contrib/{$name}": ["type:drupal-module"],
-            "web/profiles/contrib/{$name}": ["type:drupal-profile"],
-            "web/themes/contrib/{$name}": ["type:drupal-theme"],
-            "drush/Commands/contrib/{$name}": ["type:drupal-drush"],
-            "web/modules/custom/{$name}": ["type:drupal-custom-module"],
-            "web/profiles/custom/{$name}": ["type:drupal-custom-profile"],
-            "web/themes/custom/{$name}": ["type:drupal-custom-theme"],
-            "recipes/{$name}": ["type:drupal-recipe"]
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "web/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "web/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "drush/Commands/contrib/{$name}": [
+                "type:drupal-drush"
+            ],
+            "web/modules/custom/{$name}": [
+                "type:drupal-custom-module"
+            ],
+            "web/profiles/custom/{$name}": [
+                "type:drupal-custom-profile"
+            ],
+            "web/themes/custom/{$name}": [
+                "type:drupal-custom-theme"
+            ],
+            "recipes/{$name}": [
+                "type:drupal-recipe"
+            ]
         },
         "drupal-core-project-message": {
-            "include-keys": ["homepage", "support"],
+            "include-keys": [
+                "homepage",
+                "support"
+            ],
             "post-create-project-cmd-message": [
                 "<bg=blue;fg=white>                                                         </>",
                 "<bg=blue;fg=white>  Congratulations, you’ve installed the Drupal codebase  </>",
