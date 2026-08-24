@@ -65,10 +65,12 @@ automatically, so any visitor who registers can vote.
 
 ## Seeded content
 
-8 polls · 35 image options · ~70 ballots, drawn from real Drupal community surveys and forum threads. Two
+8 polls · 35 image options · 80 ballots, drawn from real Drupal community surveys and forum threads. Two
 states are seeded on purpose so both configurations are visible to a reviewer:
 
-- **One closed poll** — *"Which admin theme should be Drupal's default: Gin or Claro?"* (accepts no votes).
+- **One closed poll** — *"Which admin theme should be Drupal's default: Gin or Claro?"*. It is seeded open,
+  collects its ballots and is closed afterwards, the way a real poll runs: it refuses every new vote yet still
+  shows a full result.
 - **Two polls hide their totals after you vote** (`show_results` off); the rest reveal them.
 
 ---
@@ -94,6 +96,26 @@ All under the Gin admin theme. Reachable by the administrator only.
 | `/admin/content/polls/{id}/delete` | Delete a poll |
 | `/admin/config/voting` | Global switch — turn voting on/off across the whole site (CMS and API) |
 | `/admin/reports/dblog` | Audit trail — filter by the `drupal_simple_voting` log channel |
+
+## Poll list block
+
+The poll index is also a placeable **block**, so the same listing can sit in a sidebar — or any region of any
+theme — instead of only at `/polls`. In **Structure → Block layout**, pick a region and choose **Place block**,
+then select **Poll list** (category **Voting**). The page and the block both read through the shared
+`drupal_simple_voting.poll_index` service (`PollIndex`), so the block renders the same cards — title,
+description and an Open/Closed state — and applies the same access rule from a single place.
+
+- **Who sees it** — anyone with the `access content` permission. Exactly as on the page, an anonymous click on a
+  card lands on the login screen with a `destination` back to the chosen poll.
+- **Settings** — Drupal's standard **Title** / **Display title**, plus **Polls per page** (a number, 0–100,
+  default 5). Polls beyond that count fall behind the block's own pager; **`0` lists every poll and hides the
+  pager.**
+- **Narrow regions** — the pager is restyled to fit a slim column: `scss/base/_pager.scss` shrinks core's pager
+  down to a sidebar width.
+
+Every placed instance is cleaned up on uninstall — `drupal_simple_voting_uninstall()` calls
+`drupal_simple_voting_remove_placed_blocks()`, which deletes the `block` entities whose plugin is
+`drupal_simple_voting_poll_list`.
 
 ---
 
@@ -208,8 +230,8 @@ respects it:
 2. **Uninstall `drupal_simple_voting`.**
 
 On uninstall the module reverts everything it set up: it restores the previous front page and registration
-setting, removes the `voter` role, and deletes the demo account and the seed voters. After that, `/polls`,
-`/docs`, `/docs/openapi.json` and `/api/v1/polls` all return `404`.
+setting, removes the `voter` role, deletes the demo account and the seed voters, and removes every placed
+*Poll list* block. After that, `/polls`, `/docs`, `/docs/openapi.json` and `/api/v1/polls` all return `404`.
 
 ---
 
