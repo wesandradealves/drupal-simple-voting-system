@@ -26,7 +26,7 @@ lando install    # install/repair the site (idempotent — safe to re-run)
 `scripts/install.sh` (behind `lando install`) does, in order:
 
 1. waits for MariaDB to accept connections;
-2. installs Composer dependencies and verifies the vendored Bootstrap/Swagger assets and the module's
+2. installs Composer dependencies and verifies the vendored Swagger UI assets and the module's
    `.info.yml` are present (aborts with a clear message otherwise);
 3. installs Drupal with the **`minimal`** profile (skips if already installed);
 4. **uninstalls `node`** — the domain uses custom content entities, so core's node module is not wanted;
@@ -251,8 +251,11 @@ postman/simple-voting.postman_environment.json --insecure`.
    `BallotBox`, the single point both the CMS and the API pass through.
 6. **One rule, one place.** The API reimplements nothing; it uses the same `drupal_simple_voting.policy` and
    `drupal_simple_voting.ballot_box` services the browser UI uses.
-7. **Zero theme dependency.** The module attaches its own Bootstrap and its own CSS, so it works under any
-   theme.
+7. **Zero theme dependency.** The module ships its own CSS and defines its own button (the `.vt-action`
+   class). Because core stamps `.button`/`.button--primary` onto every submit and the active theme paints
+   those with equal specificity, the ballot form drops those theme hooks via `#pre_render`, so the button
+   keeps the module's styling under any theme — no specificity war, no `!important`. Focus gets a visible
+   ring (`:focus-visible`).
 8. **Two switches.** `drupal_simple_voting.settings: enabled` turns voting off for the whole site (CMS and
    API); each poll's `show_results` decides whether its totals appear after a vote. Openness is the poll's
    `status` (open/closed). All of it is evaluated by the policy service, never in a template.
@@ -300,16 +303,12 @@ Composer manages everything under `web/`.
   menu links, an action link and local tasks; without core's toolbar there is no menu bar to display them and
   each admin page could only be reached by typing its URL.
 - **Contrib:** `drupal/gin` (^5.0) and `drupal/gin_toolbar` (^3.0) — the admin theme.
-- **Front-end libraries**, vendored into `web/libraries/` by Composer scripts (`post-install-cmd` /
+- **Front-end library**, vendored into `web/libraries/` by Composer scripts (`post-install-cmd` /
   `post-update-cmd`):
-  - `twbs/bootstrap` (^5.3) → `web/libraries/bootstrap/dist`
   - `swagger-api/swagger-ui` (^5.32) → `web/libraries/swagger-ui/dist`
 - **Dart Sass** is installed into the appserver by `.lando/scripts/install-dart-sass.sh`. There is no Node in
   the stack.
 - **Deliberately not used:** core `rest`, core `jsonapi` (the API is hand-written), and `node`.
-
-> Cleanup pending: `drupal/bootstrap_barrio` is still declared in `composer.json` from an earlier theming
-> approach and is no longer used.
 
 ## Project layout
 
@@ -317,7 +316,7 @@ Composer manages everything under `web/`.
 .lando.yml                                   Environment: recipe, services, proxy, tooling
 .lando/                                      Nginx vhost, php.ini, the Dart Sass install script
 scripts/install.sh                           Idempotent installer (behind `lando install`)
-composer.json / composer.lock                Dependencies; scripts vendor Bootstrap and Swagger UI
+composer.json / composer.lock                Dependencies; scripts vendor Swagger UI
 config/sync/                                 Configuration export target
 postman/                                     Postman collection and environment
 web/modules/custom/drupal_simple_voting/     The module: domain, CMS, API, /docs, SDC presentation

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\drupal_simple_voting;
 
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\File\FileExists;
@@ -13,7 +14,6 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\file\FileInterface;
 use Drupal\user\Entity\User;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Fills a fresh install with sample polls, voters and ballots.
@@ -23,6 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * again.
  */
 final class PollSeeder implements ContainerInjectionInterface {
+
+  use AutowireTrait;
 
   public const VOTER_ROLE = 'voter';
   public const DEMO_USER = 'eleitor';
@@ -55,16 +57,6 @@ final class PollSeeder implements ContainerInjectionInterface {
     private readonly StateInterface $state,
     private readonly TimeInterface $time,
   ) {}
-
-  public static function create(ContainerInterface $container): static {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('file_system'),
-      $container->get('extension.list.module'),
-      $container->get('state'),
-      $container->get('datetime.time'),
-    );
-  }
 
   /**
    * Creates the sample voters, polls and ballots, once.
@@ -178,9 +170,9 @@ final class PollSeeder implements ContainerInjectionInterface {
       $question->save();
 
       $weight = 0;
-      foreach ($row['options'] ?? [] as $index => $option) {
+      foreach ($row['options'] ?? [] as $option_index => $option) {
         $image = $this->drawOption(
-          sprintf('poll-%s-%d.png', $question->id(), $index),
+          sprintf('poll-%s-%d.png', $question->id(), $option_index),
           $option['color'] ?? [70, 110, 160],
         );
 

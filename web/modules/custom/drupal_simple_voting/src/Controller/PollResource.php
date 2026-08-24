@@ -6,32 +6,23 @@ namespace Drupal\drupal_simple_voting\Controller;
 
 use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingQuestionInterface;
 use Drupal\drupal_simple_voting\PollSerializer;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Read-only endpoints for the questions.
  */
-final class PollResource extends ControllerBase {
+final class PollResource extends ApiResource {
+
+  use AutowireTrait;
 
   public function __construct(
     private readonly PollSerializer $serializer,
     private readonly VotingPolicy $policy,
   ) {}
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): static {
-    return new static(
-      $container->get('drupal_simple_voting.serializer'),
-      $container->get('drupal_simple_voting.policy'),
-    );
-  }
 
   public function collection(): CacheableJsonResponse {
     $storage = $this->entityTypeManager()->getStorage('voting_question');
@@ -41,13 +32,11 @@ final class PollResource extends ControllerBase {
       ->sort('created', 'DESC')
       ->execute();
 
-    $account = $this->currentUser();
-    $data = [];
-    foreach ($storage->loadMultiple($ids) as $question) {
-      if ($question instanceof VotingQuestionInterface) {
-        $data[] = $this->serializer->summary($question, $account);
-      }
-    }
+    $questions = array_filter(
+      $storage->loadMultiple($ids),
+      static fn ($question): bool => $question instanceof VotingQuestionInterface,
+    );
+    $data = $this->serializer->collection(array_values($questions), $this->currentUser());
 
     $response = new CacheableJsonResponse(['data' => $data]);
     $cacheability = new CacheableMetadata();
@@ -62,7 +51,7 @@ final class PollResource extends ControllerBase {
   public function item(string $uuid): JsonResponse {
     $question = $this->serializer->loadByUuid($uuid);
     if ($question === NULL) {
-      return new JsonResponse(['error' => 'Poll not found.'], 404);
+      return $this->pollNotFound();
     }
 
     $response = new CacheableJsonResponse([

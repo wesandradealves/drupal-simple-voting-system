@@ -10,7 +10,7 @@ props:
     state:
       type: string
       title: Which state the ballot is in
-      enum: [open, voted, closed, anonymous, empty, error]
+      enum: [open, voted, closed, anonymous, empty]
     message:
       type: string
       title: The sentence shown to the reader

@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\drupal_simple_voting\BallotBox;
 use Drupal\drupal_simple_voting\VoteTally;
 use Drupal\drupal_simple_voting\VotingOptionInterface;
+use Drupal\drupal_simple_voting\VotingOptionSetSynchronizer;
 use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingQuestionInterface;
 
@@ -27,21 +28,47 @@ final class PollSerializer {
     private readonly VotingPolicy $policy,
     private readonly BallotBox $ballotBox,
     private readonly FileUrlGeneratorInterface $fileUrlGenerator,
+    private readonly VotingOptionSetSynchronizer $optionSet,
   ) {}
 
   /**
+   * @param bool|null $has_voted
+   *   Whether this elector already voted, when a caller serialising a whole
+   *   listing has already read it in one query. Left null, a single-question
+   *   caller has it read here.
+   *
    * @return array<string, mixed>
    */
-  public function summary(VotingQuestionInterface $question, AccountInterface $account): array {
+  public function summary(VotingQuestionInterface $question, AccountInterface $account, ?bool $has_voted = NULL): array {
     return [
       'id' => $question->uuid(),
       'title' => $question->getTitle(),
       'description' => (string) $question->getDescription(),
       'open' => $this->policy->isOpen($question),
       'reveals_totals' => $question->showsResults(),
-      'has_voted' => $this->ballotBox->findVote($question, $account) !== NULL,
-      'created' => (int) $question->get('created')->value,
+      'has_voted' => $has_voted ?? ($this->ballotBox->findVote($question, $account) !== NULL),
+      'created' => $question->getCreatedTime(),
     ];
+  }
+
+  /**
+   * Summaries for a set of questions, reading their ballots in one query.
+   *
+   * @param array<int, \Drupal\drupal_simple_voting\VotingQuestionInterface> $questions
+   *   The questions to serialise, in the order they should appear.
+   *
+   * @return array<int, array<string, mixed>>
+   */
+  public function collection(array $questions, AccountInterface $account): array {
+    $ids = array_map(static fn (VotingQuestionInterface $question): int => (int) $question->id(), $questions);
+    $voted = $this->ballotBox->votedQuestionIds($ids, $account);
+
+    $summaries = [];
+    foreach ($questions as $question) {
+      $summaries[] = $this->summary($question, $account, isset($voted[(int) $question->id()]));
+    }
+
+    return $summaries;
   }
 
   /**
@@ -96,18 +123,7 @@ final class PollSerializer {
    * @return array<int, \Drupal\drupal_simple_voting\VotingOptionInterface>
    */
   public function options(VotingQuestionInterface $question): array {
-    $storage = $this->entityTypeManager->getStorage('voting_option');
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('question', $question->id())
-      ->sort('weight')
-      ->sort('id')
-      ->execute();
-
-    return array_values(array_filter(
-      $storage->loadMultiple($ids),
-      static fn ($o): bool => $o instanceof VotingOptionInterface,
-    ));
+    return $this->optionSet->orderedForQuestion($question);
   }
 
   public function loadByUuid(string $uuid): ?VotingQuestionInterface {

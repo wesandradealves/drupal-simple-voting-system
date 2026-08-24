@@ -36,6 +36,11 @@ services:
       - '@request_stack'
   Drupal\drupal_simple_voting\PollIndex: '@drupal_simple_voting.poll_index'
 
+  drupal_simple_voting.option_set:
+    class: Drupal\drupal_simple_voting\VotingOptionSetSynchronizer
+    arguments: ['@entity_type.manager']
+  Drupal\drupal_simple_voting\VotingOptionSetSynchronizer: '@drupal_simple_voting.option_set'
+
   drupal_simple_voting.serializer:
     class: Drupal\drupal_simple_voting\PollSerializer
     arguments:
@@ -44,6 +49,7 @@ services:
       - '@drupal_simple_voting.policy'
       - '@drupal_simple_voting.ballot_box'
       - '@file_url_generator'
+      - '@drupal_simple_voting.option_set'
   Drupal\drupal_simple_voting\PollSerializer: '@drupal_simple_voting.serializer'
 
   drupal_simple_voting.api_format:

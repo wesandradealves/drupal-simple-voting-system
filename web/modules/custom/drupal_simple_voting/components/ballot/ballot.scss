@@ -44,6 +44,10 @@
   display: none;
 }
 
+.vt-ballot__submit {
+  padding: var(--vt-default-option-padding);
+}
+
 .vt-ballot__total {
   margin: 0;
   opacity: 0.7;

@@ -5,38 +5,32 @@ declare(strict_types=1);
 namespace Drupal\drupal_simple_voting\Form;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element\Submit;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 use Drupal\drupal_simple_voting\BallotBox;
+use Drupal\drupal_simple_voting\BallotNotice;
 use Drupal\drupal_simple_voting\Exception\DuplicateVoteException;
 use Drupal\drupal_simple_voting\Exception\VotingClosedException;
 use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingQuestionInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * The ballot for one question.
  */
-final class BallotForm extends FormBase {
+final class BallotForm extends FormBase implements TrustedCallbackInterface {
+
+  use AutowireTrait;
 
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly BallotBox $ballotBox,
     private readonly VotingPolicy $policy,
   ) {}
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): static {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('drupal_simple_voting.ballot_box'),
-      $container->get('drupal_simple_voting.policy'),
-    );
-  }
 
   /**
    * {@inheritdoc}
@@ -81,9 +75,7 @@ final class BallotForm extends FormBase {
       '#type' => 'component',
       '#component' => 'drupal_simple_voting:ballot',
       '#props' => [
-        'question_title' => $voting_question->getTitle(),
         'question_description' => (string) $voting_question->getDescription(),
-        'heading_level' => 'h1',
         'show_totals' => FALSE,
       ],
     ];
@@ -115,7 +107,6 @@ final class BallotForm extends FormBase {
         '#type' => 'component',
         '#component' => 'drupal_simple_voting:ballot-option',
         '#props' => [
-          'option_id' => (string) $option['key'],
           'input_id' => $option['input_id'],
           'title' => $option['title'],
           'description' => (string) $option['description'],
@@ -143,7 +134,15 @@ final class BallotForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Confirm vote'),
       '#button_type' => 'primary',
-      '#attributes' => ['class' => ['btn', 'btn-primary', 'vt-ballot__submit']],
+      '#attributes' => ['class' => ['vt-action', 'vt-ballot__submit']],
+      // Core stamps every submit with .button (and .button--primary), which the
+      // active theme paints over the module's own .vt-action at equal
+      // specificity. Dropping those theme hooks keeps the module button without
+      // a specificity war or !important.
+      '#pre_render' => [
+        [Submit::class, 'preRenderButton'],
+        [self::class, 'stripThemeButtonClasses'],
+      ],
     ];
     $form['ballot']['actions']['#access'] = AccessResult::allowedIf($can_vote)
       ->addCacheableDependency($voting_question)
@@ -151,6 +150,30 @@ final class BallotForm extends FormBase {
       ->cachePerUser();
 
     return $form;
+  }
+
+  /**
+   * Strips the theme button classes core stamps onto the submit.
+   *
+   * Runs after Submit::preRenderButton(), so it removes the .button and
+   * .button--* hooks the active theme styles, leaving the module's .vt-action.
+   */
+  public static function stripThemeButtonClasses(array $element): array {
+    $classes = $element['#attributes']['class'] ?? [];
+    $element['#attributes']['class'] = array_values(array_filter(
+      $classes,
+      static fn ($class): bool => $class !== 'button'
+        && (!is_string($class) || !str_starts_with($class, 'button--')),
+    ));
+
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks(): array {
+    return ['stripThemeButtonClasses'];
   }
 
   /**
@@ -167,7 +190,7 @@ final class BallotForm extends FormBase {
       return;
     }
     if (!$this->policy->isOpen($question)) {
-      $form_state->setErrorByName('choice', $this->t('This poll is closed.'));
+      $form_state->setErrorByName('choice', BallotNotice::closed());
       return;
     }
 
@@ -200,11 +223,11 @@ final class BallotForm extends FormBase {
 
     try {
       $this->ballotBox->cast($question, $option, $this->currentUser());
-      $this->messenger()->addStatus($this->t('Your vote was recorded.'));
+      $this->messenger()->addStatus(BallotNotice::recorded());
       $form_state->setRedirectUrl($question->toUrl());
     }
     catch (DuplicateVoteException) {
-      $this->messenger()->addError($this->t('You have already voted in this poll.'));
+      $this->messenger()->addError(BallotNotice::alreadyVoted());
       $form_state->setRebuild();
     }
     catch (VotingClosedException) {
@@ -246,15 +269,15 @@ final class BallotForm extends FormBase {
       return (string) $this->t('This poll has no options yet.');
     }
     if ($already_voted) {
-      return (string) $this->t('You have already voted in this poll.');
+      return (string) BallotNotice::alreadyVoted();
     }
     if (!$this->policy->isOpen($question)) {
-      return (string) $this->t('This poll is closed.');
+      return (string) BallotNotice::closed();
     }
 
     return $this->currentUser()->isAnonymous()
       ? (string) $this->t('Sign in to vote in this poll.')
-      : (string) $this->t('You are not allowed to vote in this poll.');
+      : (string) BallotNotice::notAllowed();
   }
 
   /**

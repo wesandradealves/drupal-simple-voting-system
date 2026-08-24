@@ -37,11 +37,4 @@ final class VoteTally {
     return $counts;
   }
 
-  /**
-   * Ballots cast on the question, across every option.
-   */
-  public function totalFor(VotingQuestionInterface $question): int {
-    return (int) array_sum($this->countsFor($question));
-  }
-
 }
