@@ -177,9 +177,6 @@ postman/simple-voting.postman_environment.json --insecure`.
 
 ## Architecture — final decisions
 
-The full record, with the options that were rejected and why, is in
-[`docs/architecture-decisions.md`](docs/architecture-decisions.md).
-
 1. **One vote per user per question, under concurrency.** A unique key `voting_vote__user_question (uid,
    question)` is the only arbiter. `BallotBox::cast()` does not read-then-write — it inserts and lets the
    database refuse the second ballot, turning the violation into a `DuplicateVoteException` (the API returns
@@ -261,8 +258,6 @@ scripts/install.sh                           Idempotent installer (behind `lando
 composer.json / composer.lock                Dependencies; scripts vendor Bootstrap and Swagger UI
 config/sync/                                 Configuration export target
 postman/                                     Postman collection and environment
-docs/architecture-decisions.md               Every architectural decision, with its reasoning
-docs/STATUS.md                               Operational state: what is done, what is next
 web/modules/custom/drupal_simple_voting/     The module: domain, CMS, API, /docs, SDC presentation
 ```
 

@@ -57,6 +57,9 @@
 # Local working notes and approval mockups. Never committed.
 /.scratch/
 
+# Development notes kept on the machine only.
+/docs/
+
 .codegraph/
 
 /dist/
