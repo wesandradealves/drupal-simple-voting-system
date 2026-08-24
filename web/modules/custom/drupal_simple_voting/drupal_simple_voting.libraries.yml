@@ -1,5 +1,5 @@
 drupal_simple_voting:
-  version: 1.1.0
+  version: 1.2.0
   css:
     base:
       /libraries/bootstrap/dist/css/bootstrap.min.css: { minified: true }
@@ -9,7 +9,7 @@ drupal_simple_voting:
     /libraries/bootstrap/dist/js/bootstrap.bundle.min.js: { minified: true, attributes: { defer: true } }
 
 swagger:
-  version: 1.1.0
+  version: 1.2.0
   css:
     base:
       /libraries/swagger-ui/dist/swagger-ui.css: { minified: true }
@@ -24,7 +24,7 @@ swagger:
     - core/once
 
 admin:
-  version: 1.1.0
+  version: 1.2.0
   css:
     theme:
       css/admin.css: {}
