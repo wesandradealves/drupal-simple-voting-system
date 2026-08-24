@@ -1,0 +1,125 @@
+{
+  "polls": [
+    {
+      "title": "Which local development environment do you use for Drupal?",
+      "description": "A recurring tooling question in the Drupal Developer Survey and on the drupal.org support forums.",
+      "show_results": true,
+      "status": true,
+      "source": "https://www.drupal.org/forum/support/module-development-and-code-questions/2023-04-07/ddev-lando-docker4drupal-docksal-why-choose-one-over-the-other",
+      "options": [
+        {"title": "DDEV", "description": "Docker-based; the most recommended local environment in the 2025 developer survey.", "color": [46, 125, 200]},
+        {"title": "Lando", "description": "Docker-based, multi-stack local development tool.", "color": [230, 126, 34]},
+        {"title": "Docker4Drupal", "description": "Ready-made Docker Compose stack tuned for Drupal.", "color": [39, 174, 96]},
+        {"title": "Docksal", "description": "Docker-based environment with a shared team configuration.", "color": [155, 89, 182]},
+        {"title": "My own LAMP/WAMP stack", "description": "A hand-managed local server, no containers.", "color": [127, 140, 141]}
+      ]
+    },
+    {
+      "title": "For a new project today, do you start from Drupal CMS or Drupal core?",
+      "description": "Since Drupal CMS launched next to Drupal 11, the community keeps debating where a new build should start.",
+      "show_results": true,
+      "status": true,
+      "source": "https://www.drupal.org/forum/support/before-you-start/2025-03-11/should-i-use-drupal-core-or-drupal-cms",
+      "options": [
+        {"title": "Drupal CMS", "description": "Recipe-driven install with curated defaults, quick to get going.", "color": [0, 119, 192]},
+        {"title": "Drupal core (11)", "description": "The classic install; a smaller surface with full control.", "color": [211, 84, 0]},
+        {"title": "It depends on the project", "description": "Choose per client and requirements.", "color": [39, 174, 96]},
+        {"title": "Still deciding", "description": "Not settled on either yet.", "color": [149, 165, 166]}
+      ]
+    },
+    {
+      "title": "Which admin theme should be Drupal's default: Gin or Claro?",
+      "description": "Drupal core has decided to adopt Gin as its default admin theme, replacing Claro in 11.3.",
+      "show_results": true,
+      "status": false,
+      "source": "https://www.drupal.org/about/core/blog/drupal-core-will-adopt-gin-admin-theme-to-replace-claro",
+      "options": [
+        {"title": "Gin", "description": "Modern contrib admin theme, chosen as the new core default.", "color": [26, 188, 156]},
+        {"title": "Claro", "description": "The core admin theme since Drupal 9.", "color": [41, 128, 185]},
+        {"title": "Adminimal", "description": "Long-standing lightweight contrib admin theme.", "color": [192, 57, 43]},
+        {"title": "A custom admin sub-theme", "description": "An in-house theme built for the team.", "color": [142, 68, 173]}
+      ]
+    },
+    {
+      "title": "Which CDN do you put in front of your Drupal sites?",
+      "description": "Content delivery preferences reported in the 2025 Drupal Developer Survey.",
+      "show_results": true,
+      "status": true,
+      "source": "https://www.thedroptimes.com/51215/drupal-developer-survey-2025-results-are-outx",
+      "options": [
+        {"title": "Cloudflare", "description": "Most used CDN among Drupal developers in 2025.", "color": [243, 146, 55]},
+        {"title": "Fastly", "description": "Edge CDN with a well-known Drupal integration.", "color": [231, 76, 60]},
+        {"title": "AWS CloudFront", "description": "Amazon's content delivery network.", "color": [45, 62, 80]},
+        {"title": "Akamai", "description": "Long-established enterprise CDN.", "color": [0, 153, 204]}
+      ]
+    },
+    {
+      "title": "Which Platform-as-a-Service do you host Drupal on?",
+      "description": "Hosting preferences reported in the 2025 Drupal Developer Survey.",
+      "show_results": false,
+      "status": true,
+      "source": "https://www.thedroptimes.com/51215/drupal-developer-survey-2025-results-are-outx",
+      "options": [
+        {"title": "Pantheon", "description": "Most widely used Drupal PaaS in the 2025 survey.", "color": [255, 196, 37]},
+        {"title": "Platform.sh", "description": "Git-driven PaaS with strong user recommendations.", "color": [107, 79, 187]},
+        {"title": "Acquia", "description": "Enterprise Drupal cloud founded by Drupal's creator.", "color": [0, 164, 224]},
+        {"title": "Amazee.io", "description": "Lagoon-based open-source hosting for Drupal.", "color": [233, 30, 99]}
+      ]
+    },
+    {
+      "title": "Which industry are most of your Drupal projects for?",
+      "description": "Sectors where Drupal agencies report most of their client work, per the annual Drupal Business Survey.",
+      "show_results": true,
+      "status": true,
+      "source": "https://www.exove.com/blogs/annual-drupal-business-survey-2019/",
+      "options": [
+        {"title": "Education", "description": "Universities and schools; the largest reported sector.", "color": [41, 128, 185]},
+        {"title": "Government & Public Administration", "description": "Public-sector portals and services.", "color": [52, 73, 94]},
+        {"title": "Charity & Non-Profit", "description": "NGOs, foundations and associations.", "color": [231, 76, 60]},
+        {"title": "Banking & Insurance", "description": "Financial services sites and portals.", "color": [39, 174, 96]},
+        {"title": "Healthcare", "description": "Hospitals and health-service providers.", "color": [26, 188, 156]}
+      ]
+    },
+    {
+      "title": "What is Drupal's strongest selling point to clients?",
+      "description": "The values business decision-makers cite most when choosing Drupal, per the 2024 Drupal Business Survey.",
+      "show_results": true,
+      "status": true,
+      "source": "https://www.drupal.org/association/blog/drupal-business-survey-2024",
+      "options": [
+        {"title": "Security", "description": "Drupal's security track record and dedicated team.", "color": [192, 57, 43]},
+        {"title": "Flexibility", "description": "Adapts to complex content models and workflows.", "color": [243, 156, 18]},
+        {"title": "Reliability", "description": "A stable, predictable long-term platform.", "color": [41, 128, 185]},
+        {"title": "Open source & vendor independence", "description": "No lock-in; owned by the community.", "color": [39, 174, 96]}
+      ]
+    },
+    {
+      "title": "Besides Drupal, which platform would you recommend to a peer?",
+      "description": "How Drupal developers rated the other platforms they work with in the 2025 Drupal Developer Survey.",
+      "show_results": false,
+      "status": true,
+      "source": "https://www.thedroptimes.com/51215/drupal-developer-survey-2025-results-are-outx",
+      "options": [
+        {"title": "Laravel", "description": "PHP framework with the highest peer recommendation in the survey.", "color": [239, 68, 68]},
+        {"title": "WordPress", "description": "Widely used, but polarizing among Drupal developers.", "color": [33, 117, 155]},
+        {"title": "Shopify", "description": "Hosted e-commerce platform.", "color": [122, 181, 71]},
+        {"title": "Sitecore", "description": "Proprietary enterprise digital experience platform.", "color": [155, 89, 182]},
+        {"title": "Umbraco", "description": "Open-source .NET content management system.", "color": [51, 64, 124]}
+      ]
+    }
+  ],
+  "users": [
+    {"name": "andre.figueira", "mail": "andre.figueira@example.com"},
+    {"name": "beatriz.antunes", "mail": "beatriz.antunes@example.com"},
+    {"name": "lucas.moreira", "mail": "lucas.moreira@example.com"},
+    {"name": "daniela.prado", "mail": "daniela.prado@example.com"},
+    {"name": "henrik.larsson", "mail": "henrik.larsson@example.com"},
+    {"name": "flavia.marques", "mail": "flavia.marques@example.com"},
+    {"name": "sofia.nakamura", "mail": "sofia.nakamura@example.com"},
+    {"name": "helena.castro", "mail": "helena.castro@example.com"},
+    {"name": "omar.haddad", "mail": "omar.haddad@example.com"},
+    {"name": "larissa.fontes", "mail": "larissa.fontes@example.com"},
+    {"name": "mateus.aragao", "mail": "mateus.aragao@example.com"},
+    {"name": "priya.nair", "mail": "priya.nair@example.com"}
+  ]
+}
