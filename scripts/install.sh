@@ -179,6 +179,9 @@ log_step "Installing and selecting the themes"
 "$DRUSH" theme:install gin -y
 "$DRUSH" config:set system.theme default olivero -y
 "$DRUSH" config:set system.theme admin gin -y
+# gin_toolbar declares no dependency on core's toolbar, so without this the
+# admin has no menu bar at all and every page has to be reached by URL.
+"$DRUSH" pm:install toolbar -y
 "$DRUSH" pm:install gin_toolbar -y
 
 log_step "Rebuilding the caches"

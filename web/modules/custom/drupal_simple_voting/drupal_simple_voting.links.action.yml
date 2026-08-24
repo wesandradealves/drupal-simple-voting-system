@@ -1,0 +1,8 @@
+# Without this the collection page lists polls and offers no way to create one:
+# the add form exists but nothing in the interface points at it.
+entity.voting_question.add_form:
+  route_name: entity.voting_question.add_form
+  title: 'Add poll'
+  appears_on:
+    - entity.voting_question.collection
+    - system.admin_content
