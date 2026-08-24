@@ -55,13 +55,14 @@ public network.
 
 | Username | Password | Role | Purpose |
 | --- | --- | --- | --- |
-| `admin` | `admin` | administrator | Full CMS access |
+| `admin` | `admin` | uid 1 (superuser) | Full CMS access |
 | `eleitor` | `eleitor` | voter | Demo voter |
 | `andre.figueira`, `beatriz.antunes`, `lucas.moreira`, `daniela.prado`, `henrik.larsson`, `flavia.marques`, `sofia.nakamura`, `helena.castro`, `omar.haddad`, `larissa.fontes`, `mateus.aragao`, `priya.nair` | *same as the username* | voter | 12 seed voters |
 
-The `voter` role is the **only** role allowed to cast a ballot (`authenticated` has that permission revoked on
-install). It grants no admin access. Registration is open, and every new account gets the `voter` role
-automatically, so any visitor who registers can vote.
+The site has three roles — `anonymous`, `authenticated` and `voter`. The `voter` role is the **only** one
+allowed to cast a ballot (`authenticated` has that permission revoked on install). It grants no admin access.
+Registration is open, and every new account gets the `voter` role automatically, so any visitor who registers
+can vote.
 
 ## Seeded content
 
