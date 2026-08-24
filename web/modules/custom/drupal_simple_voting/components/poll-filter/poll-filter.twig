@@ -1,3 +1,6 @@
+{# The label wraps its control instead of pointing at an id: the page and a
+   placed block can both render this filter, and two ids of the same name on
+   one document would break the association for a screen reader. #}
 <form class="vt-filter" method="get" action="{{ action }}">
   <label class="vt-filter__field">
     <span class="vt-filter__label">{{ 'Status'|t }}</span>
