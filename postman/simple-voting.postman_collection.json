@@ -1,0 +1,841 @@
+{
+  "info": {
+    "_postman_id": "9b2f1c34-5a6d-4e70-8b91-0c2d3e4f5a60",
+    "name": "Simple Voting API",
+    "description": "External REST API of the Simple Voting module (Drupal 11).\n\nRun the requests top to bottom (Collection Runner or Newman). The flow logs in, captures the CSRF token, discovers an open poll and one of its options, then exercises every documented response — including the central 409 duplicate-vote case.\n\nReads (GET) are public. Writes (POST /vote) need the session cookie and the X-CSRF-Token header. Point baseUrl / adminUser / adminPass through the bundled environment. Lando serves a self-signed certificate, so disable TLS verification (Settings off, or `newman run ... --insecure`).\n\nThe closed-poll (403) request activates when the data contains a closed poll, or when voting is switched off globally at /admin/config/voting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login (cookie session)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login -> 200', function () { pm.response.to.have.status(200); });",
+                  "let j; try { j = pm.response.json(); } catch (e) { j = {}; }",
+                  "pm.test('returns current_user + csrf_token', function () {",
+                  "  pm.expect(j).to.have.property('current_user');",
+                  "  pm.expect(j).to.have.property('csrf_token');",
+                  "});",
+                  "if (j.csrf_token) { pm.collectionVariables.set('csrfToken', j.csrf_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user/login?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{adminUser}}\",\n  \"pass\": \"{{adminPass}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Opens an authenticated session. Drupal stores it in a cookie that Postman/Newman replays on every later request."
+          }
+        },
+        {
+          "name": "Get CSRF token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET /session/token -> 200', function () { pm.response.to.have.status(200); });",
+                  "var t = pm.response.text().trim();",
+                  "pm.test('token is not empty', function () { pm.expect(t.length).to.be.above(0); });",
+                  "pm.collectionVariables.set('csrfToken', t);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/session/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "session",
+                "token"
+              ]
+            },
+            "description": "Returns the session CSRF token as plain text. It must be sent in the X-CSRF-Token header on every write; without it the vote endpoint answers 403."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Polls (public reads)",
+      "item": [
+        {
+          "name": "List polls",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET /api/v1/polls -> 200', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json().data;",
+                  "pm.test('data is an array', function () { pm.expect(data).to.be.an('array'); });",
+                  "pm.test('each poll carries the documented summary keys', function () {",
+                  "  pm.expect(data.length).to.be.above(0);",
+                  "  ['id','title','open','reveals_totals','has_voted','created'].forEach(function (k) {",
+                  "    pm.expect(data[0]).to.have.property(k);",
+                  "  });",
+                  "});",
+                  "// Pick the poll used for the vote flow: open, preferring one not yet voted by this user.",
+                  "var open = data.filter(function (p) { return p.open === true; });",
+                  "var fresh = open.find(function (p) { return p.has_voted === false; });",
+                  "var chosen = fresh || open[0] || data[0];",
+                  "pm.collectionVariables.set('pollUuid', chosen.id);",
+                  "// Remember a closed poll, if the data has one, for the 'poll is closed' (403) check.",
+                  "var closed = data.find(function (p) { return p.open === false; });",
+                  "pm.collectionVariables.set('closedPollUuid', closed ? closed.id : '');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Public list of polls. Also discovers which poll the vote requests target, so the collection is self-contained and needs no hand-entered UUIDs."
+          }
+        },
+        {
+          "name": "Get poll with options",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET /api/v1/polls/{uuid} -> 200', function () { pm.response.to.have.status(200); });",
+                  "var d = pm.response.json().data;",
+                  "pm.test('returns the requested poll', function () { pm.expect(d.id).to.eql(pm.collectionVariables.get('pollUuid')); });",
+                  "pm.test('poll carries a non-empty options array', function () {",
+                  "  pm.expect(d.options).to.be.an('array');",
+                  "  pm.expect(d.options.length).to.be.above(0);",
+                  "  ['id','title'].forEach(function (k) { pm.expect(d.options[0]).to.have.property(k); });",
+                  "});",
+                  "pm.collectionVariables.set('optionUuid', d.options[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "A single poll with its options. Captures the first option UUID for the vote flow."
+          }
+        },
+        {
+          "name": "Get poll results",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET /api/v1/polls/{uuid}/results -> 200', function () { pm.response.to.have.status(200); });",
+                  "var d = pm.response.json().data;",
+                  "pm.test('results carry poll, reveals_totals and options', function () {",
+                  "  pm.expect(d).to.have.property('poll');",
+                  "  pm.expect(d).to.have.property('reveals_totals');",
+                  "  pm.expect(d.options).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}/results?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}",
+                "results"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Tally for a poll. The body honours each poll's visibility rule: totals appear only when the poll reveals them (or the caller has already voted)."
+          }
+        },
+        {
+          "name": "Get poll — 404 not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET unknown poll -> 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('body: Poll not found.', function () { pm.expect(pm.response.json().error).to.eql('Poll not found.'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{fakeUuid}}?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{fakeUuid}}"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "A well-formed but unknown UUID resolves the route and returns a JSON 404."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Vote (writes, CSRF protected)",
+      "item": [
+        {
+          "name": "Cast vote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Re-runnable by design: a fresh ballot returns 201; if this user already voted it is 409.",
+                  "pm.test('cast vote -> 201 (new) or 409 (already voted)', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "  var d = pm.response.json().data;",
+                  "  pm.test('201 body carries id, poll, option, results', function () {",
+                  "    ['id','poll','option','results'].forEach(function (k) { pm.expect(d).to.have.property(k); });",
+                  "    pm.expect(d.option).to.eql(pm.collectionVariables.get('optionUuid'));",
+                  "    pm.expect(d.poll).to.eql(pm.collectionVariables.get('pollUuid'));",
+                  "  });",
+                  "} else {",
+                  "  pm.test('409 body: already voted', function () {",
+                  "    pm.expect(pm.response.json().error).to.eql('You have already voted in this poll.');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{optionUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Registers one ballot. After this request the user has a ballot on the poll, so the next request is guaranteed to be a duplicate."
+          }
+        },
+        {
+          "name": "Vote again — 409 duplicate (central case)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('duplicate vote -> 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('body: You have already voted in this poll.', function () {",
+                  "  pm.expect(pm.response.json().error).to.eql('You have already voted in this poll.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{optionUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "The heart of the test: one ballot per elector per poll. A second ballot from the same user on the same poll is rejected with 409. Enforced by a DB unique key, so the API can never diverge from the site."
+          }
+        },
+        {
+          "name": "Vote with invalid body — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('invalid body -> 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('body: Send a JSON body with a string option_id.', function () {",
+                  "  pm.expect(pm.response.json().error).to.eql('Send a JSON body with a string option_id.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"not_option_id\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "A body without a string option_id is rejected before any lookup."
+          }
+        },
+        {
+          "name": "Vote on missing poll — 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('vote on unknown poll -> 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('body: Poll not found.', function () { pm.expect(pm.response.json().error).to.eql('Poll not found.'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{fakeUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{fakeUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{optionUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Voting against an unknown poll UUID returns a JSON 404."
+          }
+        },
+        {
+          "name": "Vote with option from another poll — 422",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Use a UUID that is not one of this poll's options.",
+                  "if (!pm.collectionVariables.get('foreignOptionUuid')) {",
+                  "  pm.collectionVariables.set('foreignOptionUuid', pm.collectionVariables.get('fakeUuid'));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('option not in this poll -> 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('body: That option does not belong to this poll.', function () {",
+                  "  pm.expect(pm.response.json().error).to.eql('That option does not belong to this poll.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{foreignOptionUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "An option UUID that does not belong to the poll is rejected with 422."
+          }
+        },
+        {
+          "name": "Vote without CSRF token — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing X-CSRF-Token -> 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{pollUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{pollUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{optionUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No X-CSRF-Token header: the core CSRF access check rejects the write with 403 before the controller runs."
+          }
+        },
+        {
+          "name": "Vote on a closed poll — 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Only meaningful when the data contains a closed poll (open === false),",
+                  "// or when voting is disabled globally at /admin/config/voting.",
+                  "if (!pm.collectionVariables.get('closedPollUuid')) {",
+                  "  console.log('No closed poll in the data — closed-poll (403) check is skipped.');",
+                  "  if (pm.execution && pm.execution.skipRequest) { pm.execution.skipRequest(); }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('closedPollUuid')) {",
+                  "  pm.test('closed-poll (403) — skipped (no closed poll in data)', function () { pm.expect(true).to.be.true; });",
+                  "} else {",
+                  "  pm.test('closed poll -> 403', function () { pm.response.to.have.status(403); });",
+                  "  pm.test('body: This poll is closed.', function () {",
+                  "    pm.expect(pm.response.json().error).to.eql('This poll is closed.');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/polls/{{closedPollUuid}}/vote?_format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "polls",
+                "{{closedPollUuid}}",
+                "vote"
+              ],
+              "query": [
+                {
+                  "key": "_format",
+                  "value": "json"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{optionUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "A closed poll (or voting disabled globally) rejects new ballots with 403 and 'This poll is closed.'. Activates automatically when the list contains a closed poll."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://sistema-de-votacao.lndo.site",
+      "type": "string"
+    },
+    {
+      "key": "adminUser",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "adminPass",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "csrfToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pollUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "optionUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "foreignOptionUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "closedPollUuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fakeUuid",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ]
+}
