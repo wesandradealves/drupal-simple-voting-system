@@ -67,6 +67,7 @@ final class PollSeeder implements ContainerInjectionInterface {
     $voters = $this->seedUsers($data['users'] ?? []);
     $questions = $this->seedPolls($data['polls'] ?? []);
     $this->seedBallots($questions, $voters);
+    $this->closePolls($data['polls'] ?? [], $questions);
   }
 
   /**
@@ -155,7 +156,10 @@ final class PollSeeder implements ContainerInjectionInterface {
         'title' => $title,
         'description' => (string) ($row['description'] ?? ''),
         'show_results' => (bool) ($row['show_results'] ?? TRUE),
-        'status' => (bool) ($row['status'] ?? TRUE),
+        // Every poll opens first and is closed after the ballots are in, the
+        // way a real one runs: a poll seeded as closed would refuse its own
+        // sample votes and reach the reviewer with an empty result screen.
+        'status' => TRUE,
       ]);
       $question->save();
 
@@ -216,6 +220,29 @@ final class PollSeeder implements ContainerInjectionInterface {
           // A closed poll or an already-cast ballot is an expected outcome
           // here; the seed only fills what the domain rules allow.
         }
+      }
+    }
+  }
+
+  /**
+   * Closes the polls the seed marks as closed, once their ballots are in.
+   *
+   * @param array $rows
+   *   The seed rows, keyed the same way the file lists them.
+   * @param \Drupal\drupal_simple_voting\VotingQuestionInterface[] $questions
+   *   The questions this run created.
+   */
+  private function closePolls(array $rows, array $questions): void {
+    $closed = [];
+    foreach ($rows as $row) {
+      if (!(bool) ($row['status'] ?? TRUE)) {
+        $closed[(string) ($row['title'] ?? '')] = TRUE;
+      }
+    }
+
+    foreach ($questions as $question) {
+      if (isset($closed[$question->getTitle()])) {
+        $question->set('status', FALSE)->save();
       }
     }
   }
