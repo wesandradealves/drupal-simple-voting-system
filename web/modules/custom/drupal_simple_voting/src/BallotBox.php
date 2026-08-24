@@ -104,6 +104,38 @@ final class BallotBox {
     return $vote instanceof VotingVoteInterface ? $vote : NULL;
   }
 
+  /**
+   * Which of these questions this elector has already cast a ballot on.
+   *
+   * One aggregate query for the whole set, so a listing folds in the ballots
+   * it already holds in memory instead of asking the database once per poll.
+   *
+   * @param int[] $question_ids
+   *   The questions to look up.
+   *
+   * @return array<int, true>
+   *   A set keyed by the ids of the questions that carry a ballot from this
+   *   elector; questions without one are absent.
+   */
+  public function votedQuestionIds(array $question_ids, AccountInterface $account): array {
+    if ($account->isAnonymous() || $question_ids === []) {
+      return [];
+    }
+
+    $query = $this->voteStorage()->getAggregateQuery();
+    $query->accessCheck(FALSE);
+    $query->condition('uid', $account->id());
+    $query->condition('question', $question_ids, 'IN');
+    $query->groupBy('question');
+
+    $voted = [];
+    foreach ($query->execute() as $row) {
+      $voted[(int) $row['question']] = TRUE;
+    }
+
+    return $voted;
+  }
+
   private function voteStorage(): EntityStorageInterface {
     return $this->entityTypeManager->getStorage('voting_vote');
   }

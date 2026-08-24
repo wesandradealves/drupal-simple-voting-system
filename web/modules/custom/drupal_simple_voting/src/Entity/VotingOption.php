@@ -15,6 +15,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\drupal_simple_voting\VotingAccessControlHandler;
 use Drupal\drupal_simple_voting\VotingOptionInterface;
+use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingQuestionInterface;
 
 /**
@@ -182,6 +183,11 @@ class VotingOption extends ContentEntityBase implements VotingOptionInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * Removing an option changes what the result of its question shows, so the
+   * question's result cache tag is cleared here. An option nobody chose carries
+   * no ballots, so relying on the cascade below to reach that tag would leave a
+   * dropped option lingering in a cached result.
    */
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
     parent::postDelete($storage, $entities);
@@ -189,6 +195,17 @@ class VotingOption extends ContentEntityBase implements VotingOptionInterface {
     $option_ids = array_keys($entities);
     if (!$option_ids) {
       return;
+    }
+
+    $tags = [];
+    foreach ($entities as $option) {
+      $question_id = $option->get('question')->target_id;
+      if ($question_id !== NULL) {
+        $tags[VotingPolicy::resultCacheTag($question_id)] = TRUE;
+      }
+    }
+    if ($tags) {
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(array_keys($tags));
     }
 
     $vote_storage = \Drupal::entityTypeManager()->getStorage('voting_vote');

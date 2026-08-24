@@ -6,38 +6,31 @@ namespace Drupal\drupal_simple_voting\Controller;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\drupal_simple_voting\BallotBox;
+use Drupal\drupal_simple_voting\BallotNotice;
 use Drupal\drupal_simple_voting\PollIndex;
 use Drupal\drupal_simple_voting\Form\BallotForm;
 use Drupal\drupal_simple_voting\VoteTally;
 use Drupal\drupal_simple_voting\VotingOptionInterface;
+use Drupal\drupal_simple_voting\VotingOptionSetSynchronizer;
 use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingQuestionInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Public page for one question: the ballot or the result.
  */
 final class VotingController extends ControllerBase {
 
+  use AutowireTrait;
+
   public function __construct(
     private readonly VotingPolicy $policy,
     private readonly VoteTally $tally,
     private readonly BallotBox $ballotBox,
     private readonly PollIndex $pollIndex,
+    private readonly VotingOptionSetSynchronizer $optionSet,
   ) {}
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): static {
-    return new static(
-      $container->get('drupal_simple_voting.policy'),
-      $container->get('drupal_simple_voting.tally'),
-      $container->get('drupal_simple_voting.ballot_box'),
-      $container->get('drupal_simple_voting.poll_index'),
-    );
-  }
 
   public function title(VotingQuestionInterface $voting_question): string {
     return $voting_question->getTitle();
@@ -94,20 +87,20 @@ final class VotingController extends ControllerBase {
     if ($chosen !== NULL) {
       return [
         'state' => 'voted',
-        'message' => (string) $this->t('Your vote was recorded.'),
+        'message' => (string) BallotNotice::recorded(),
       ];
     }
 
     if (!$this->policy->isOpen($question)) {
       return [
         'state' => 'closed',
-        'message' => (string) $this->t('This poll is closed.'),
+        'message' => (string) BallotNotice::closed(),
       ];
     }
 
     return [
       'state' => 'open',
-      'message' => (string) $this->t('You are not allowed to vote in this poll.'),
+      'message' => (string) BallotNotice::notAllowed(),
     ];
   }
 
@@ -116,7 +109,8 @@ final class VotingController extends ControllerBase {
    */
   private function buildResults(VotingQuestionInterface $question, array $options, ?int $chosen): array {
     $counts = $this->tally->countsFor($question);
-    // totalFor() would repeat the same aggregate: the total is the sum above.
+    // Sum the counts already fetched; a second aggregate query for the total
+    // would only repeat this work.
     $total = array_sum($counts);
 
     $shows_totals = $question->showsResults();
@@ -125,9 +119,7 @@ final class VotingController extends ControllerBase {
       '#type' => 'component',
       '#component' => 'drupal_simple_voting:ballot',
       '#props' => [
-        'question_title' => $question->getTitle(),
         'question_description' => (string) $question->getDescription(),
-        'heading_level' => 'h1',
         'total_votes' => $total,
         'show_totals' => $shows_totals,
       ],
@@ -148,7 +140,6 @@ final class VotingController extends ControllerBase {
         '#type' => 'component',
         '#component' => 'drupal_simple_voting:ballot-option',
         '#props' => [
-          'option_id' => (string) $option['key'],
           'input_id' => $option['input_id'],
           'title' => $option['title'],
           'description' => (string) $option['description'],
@@ -171,19 +162,8 @@ final class VotingController extends ControllerBase {
    * @return array<int, array<string, mixed>>
    */
   private function optionRows(VotingQuestionInterface $question): array {
-    $storage = $this->entityTypeManager()->getStorage('voting_option');
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('question', $question->id())
-      ->sort('weight')
-      ->sort('id')
-      ->execute();
-
     $rows = [];
-    foreach ($storage->loadMultiple($ids) as $option) {
-      if (!$option instanceof VotingOptionInterface) {
-        continue;
-      }
+    foreach ($this->optionSet->orderedForQuestion($question) as $option) {
       $key = (string) $option->id();
       $rows[] = [
         'key' => $key,

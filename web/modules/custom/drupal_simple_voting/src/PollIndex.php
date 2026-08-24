@@ -80,6 +80,7 @@ final class PollIndex {
     }
 
     $questions = $storage->loadMultiple($query->execute());
+    $voted = $this->ballotBox->votedQuestionIds(array_keys($questions), $account);
 
     $build = [
       '#type' => 'container',
@@ -124,7 +125,7 @@ final class PollIndex {
           'description' => (string) $question->getDescription(),
           'url' => $this->cardUrl($question, $account),
           'open' => $this->policy->isOpen($question),
-          'voted' => $this->ballotBox->findVote($question, $account) !== NULL,
+          'voted' => isset($voted[(int) $question->id()]),
         ],
       ];
     }

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\drupal_simple_voting;
 
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Owns the set of options that belongs to a poll question.
@@ -19,6 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class VotingOptionSetSynchronizer implements ContainerInjectionInterface {
 
+  use AutowireTrait;
   use DependencySerializationTrait;
 
   /**
@@ -36,13 +37,6 @@ final class VotingOptionSetSynchronizer implements ContainerInjectionInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): static {
-    return new static($container->get('entity_type.manager'));
-  }
-
-  /**
    * An unsaved option, ready to back an empty row of the question form.
    */
   public function blankOption(): VotingOptionInterface {
@@ -53,10 +47,34 @@ final class VotingOptionSetSynchronizer implements ContainerInjectionInterface {
   }
 
   /**
-   * The stored options of a question, in the order voters see them.
+   * The options of a question in the order voters see them.
    *
-   * One query, served by the index EntityReferenceItem puts on the reference
-   * column of the option table.
+   * Access-checked: this feeds the public ballot and result screens, where an
+   * option is only as visible as the question that owns it.
+   *
+   * @return \Drupal\drupal_simple_voting\VotingOptionInterface[]
+   *   Options in display order, as a list.
+   */
+  public function orderedForQuestion(VotingQuestionInterface $question): array {
+    $storage = $this->optionStorage();
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('question', $question->id())
+      ->sort('weight')
+      ->sort('id')
+      ->execute();
+
+    return array_values(array_filter(
+      $storage->loadMultiple($ids),
+      static fn ($option): bool => $option instanceof VotingOptionInterface,
+    ));
+  }
+
+  /**
+   * The stored options of a question, keyed by entity ID, in display order.
+   *
+   * The question form addresses its rows by option ID, so this keeps the keys
+   * that the ordered reader drops.
    *
    * @return \Drupal\drupal_simple_voting\VotingOptionInterface[]
    *   Options keyed by entity ID.
@@ -66,13 +84,12 @@ final class VotingOptionSetSynchronizer implements ContainerInjectionInterface {
       return [];
     }
 
-    /** @var \Drupal\drupal_simple_voting\VotingOptionInterface[] $options */
-    $options = $this->optionStorage()->loadByProperties(['question' => $question->id()]);
-    uasort($options, static function (VotingOptionInterface $first, VotingOptionInterface $second): int {
-      return [$first->getWeight(), (int) $first->id()] <=> [$second->getWeight(), (int) $second->id()];
-    });
+    $keyed = [];
+    foreach ($this->orderedForQuestion($question) as $option) {
+      $keyed[(int) $option->id()] = $option;
+    }
 
-    return $options;
+    return $keyed;
   }
 
   /**

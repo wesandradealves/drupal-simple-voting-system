@@ -25,15 +25,22 @@ final class VotingPolicy {
 
   public const VIEW_RESULTS_PERMISSION = 'view poll results';
 
-  /**
-   * Invalidated whenever any ballot is cast, saved or deleted.
-   */
-  private const VOTE_LIST_CACHE_TAG = 'voting_vote_list';
-
   public function __construct(
     private readonly ConfigFactoryInterface $configFactory,
     private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
+
+  /**
+   * The cache tag carrying one question's tally.
+   *
+   * Every write that changes a question's count invalidates this tag alone, so
+   * a ballot in one poll never clears the cache of another. Built here because
+   * the policy owns what the tag means; BallotBox and the result endpoint ask
+   * for it instead of spelling the string out again.
+   */
+  public static function resultCacheTag(int|string $question_id): string {
+    return 'voting_result:' . $question_id;
+  }
 
   /**
    * Whether the question accepts ballots at all.
@@ -82,7 +89,7 @@ final class VotingPolicy {
     $cacheability->addCacheableDependency($question);
     $cacheability->addCacheableDependency($this->configFactory->get(self::SETTINGS));
     $cacheability->addCacheContexts(['user', 'user.permissions']);
-    $cacheability->addCacheTags([self::VOTE_LIST_CACHE_TAG]);
+    $cacheability->addCacheTags([self::resultCacheTag($question->id())]);
 
     return $cacheability;
   }

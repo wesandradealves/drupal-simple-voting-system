@@ -6,13 +6,12 @@ namespace Drupal\drupal_simple_voting\Entity;
 
 use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\drupal_simple_voting\VotingAccessControlHandler;
-use Drupal\drupal_simple_voting\VotingOptionInterface;
-use Drupal\drupal_simple_voting\VotingQuestionInterface;
+use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingVoteInterface;
 use Drupal\drupal_simple_voting\VotingVoteStorageSchema;
 
@@ -76,33 +75,6 @@ class VotingVote extends ContentEntityBase implements VotingVoteInterface {
   /**
    * {@inheritdoc}
    */
-  public function getQuestion(): ?VotingQuestionInterface {
-    $question = $this->get('question')->entity;
-
-    return $question instanceof VotingQuestionInterface ? $question : NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getQuestionId(): ?int {
-    $id = $this->get('question')->target_id;
-
-    return $id === NULL ? NULL : (int) $id;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getOption(): ?VotingOptionInterface {
-    $option = $this->get('option')->entity;
-
-    return $option instanceof VotingOptionInterface ? $option : NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getOptionId(): ?int {
     $id = $this->get('option')->target_id;
 
@@ -111,18 +83,44 @@ class VotingVote extends ContentEntityBase implements VotingVoteInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * A ballot written or removed changes its question's tally, so the result
+   * cache tag for that question is cleared as the row changes. This is the one
+   * place every write passes through — the CMS form, the API and any seeder all
+   * save the entity — so the tag can be per question instead of a global list
+   * tag that a vote in one poll would use to wipe the cache of every other.
    */
-  public function getVoter(): ?AccountInterface {
-    $voter = $this->get('uid')->entity;
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
 
-    return $voter instanceof AccountInterface ? $voter : NULL;
+    $question_id = $this->get('question')->target_id;
+    if ($question_id !== NULL) {
+      \Drupal::service('cache_tags.invalidator')
+        ->invalidateTags([VotingPolicy::resultCacheTag($question_id)]);
+    }
   }
 
   /**
    * {@inheritdoc}
+   *
+   * Covers every deletion the same way postSave() covers every write: a poll or
+   * option cascade loads its ballots and deletes them through here, and a single
+   * ballot revoked by hand lands here too.
    */
-  public function getCreatedTime(): int {
-    return (int) $this->get('created')->value;
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
+    $tags = [];
+    foreach ($entities as $vote) {
+      $question_id = $vote->get('question')->target_id;
+      if ($question_id !== NULL) {
+        $tags[VotingPolicy::resultCacheTag($question_id)] = TRUE;
+      }
+    }
+
+    if ($tags) {
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(array_keys($tags));
+    }
   }
 
 }

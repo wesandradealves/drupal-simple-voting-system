@@ -16,6 +16,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\drupal_simple_voting\Form\VotingQuestionForm;
 use Drupal\drupal_simple_voting\VotingAccessControlHandler;
+use Drupal\drupal_simple_voting\VotingPolicy;
 use Drupal\drupal_simple_voting\VotingQuestionListBuilder;
 use Drupal\drupal_simple_voting\VotingQuestionInterface;
 
@@ -192,6 +193,14 @@ class VotingQuestion extends ContentEntityBase implements VotingQuestionInterfac
     if (!$question_ids) {
       return;
     }
+
+    // The question's own entity tag already clears its cached result, but the
+    // result tag is invalidated explicitly too so the "a tally write clears
+    // voting_result" rule holds at every entity that can end that tally.
+    \Drupal::service('cache_tags.invalidator')->invalidateTags(array_map(
+      static fn ($question_id): string => VotingPolicy::resultCacheTag($question_id),
+      $question_ids,
+    ));
 
     foreach (['voting_option', 'voting_vote'] as $entity_type_id) {
       $child_storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
