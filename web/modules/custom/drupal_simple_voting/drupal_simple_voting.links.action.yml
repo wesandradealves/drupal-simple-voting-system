@@ -6,3 +6,11 @@ entity.voting_question.add_form:
   appears_on:
     - entity.voting_question.collection
     - system.admin_content
+
+# The kill switch belongs next to the polls it switches off. Configuration is
+# where its route lives, but nobody managing polls thinks to look there.
+drupal_simple_voting.settings:
+  route_name: drupal_simple_voting.settings
+  title: 'Voting settings'
+  appears_on:
+    - entity.voting_question.collection

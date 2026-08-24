@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 
 use Drupal\drupal_simple_voting\PollSeeder;
+use Drupal\Core\Url;
 use Drupal\user\UserInterface;
 
 /**
@@ -38,5 +39,31 @@ function drupal_simple_voting_gin_content_form_routes(): array {
   return [
     'entity.voting_question.add_form',
     'entity.voting_question.edit_form',
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for Gin's content navigation.
+ *
+ * Gin builds the block at the top of its sidebar from a hardcoded list of
+ * entity types — content, blocks, files, media — and never reads the menu, so
+ * a module cannot reach it with a menu link. On a site whose content is polls
+ * that block would otherwise show Blocks and Files alone, with no way in to
+ * the polls at all.
+ */
+function drupal_simple_voting_preprocess_menu_region__middle(array &$variables): void {
+  if (($variables['menu_name'] ?? '') !== 'content') {
+    return;
+  }
+
+  $url = Url::fromRoute('entity.voting_question.collection');
+  if (!$url->access()) {
+    return;
+  }
+
+  $variables['items']['polls'] = [
+    'title' => t('Polls'),
+    'class' => 'polls',
+    'url' => $url->toString(),
   ];
 }

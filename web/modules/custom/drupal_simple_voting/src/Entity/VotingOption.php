@@ -102,6 +102,11 @@ class VotingOption extends ContentEntityBase implements VotingOptionInterface {
     $fields['image'] = BaseFieldDefinition::create('image')
       ->setLabel(new TranslatableMarkup('Thumbnail'))
       ->setSetting('file_directory', 'voting/[date:custom:Y-m]')
+      // A thumbnail is rendered at a few hundred pixels wide. Left at the PHP
+      // default the form invites a 64 MB upload for it, and the site keeps the
+      // original at full size forever.
+      ->setSetting('max_filesize', '2 MB')
+      ->setSetting('max_resolution', '1024x1024')
       ->setSetting('alt_field', TRUE)
       // The label sits next to the thumbnail, so an empty alt is the correct
       // reading for a decorative image.

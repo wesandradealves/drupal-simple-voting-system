@@ -5,19 +5,9 @@ drupal_simple_voting.polls:
   route_name: drupal_simple_voting.polls
   weight: -10
 
-# Its own section in the admin menu instead of a child of Content. The toolbar
-# only renders the top level, so anything nested under Content is invisible
-# until the administrator guesses to click through — and this site has no
-# nodes, which makes polls its content rather than a corner of it.
-drupal_simple_voting.admin:
-  title: 'Polls'
-  description: 'Create and manage polls.'
-  parent: system.admin
-  route_name: entity.voting_question.collection
-  weight: -8
-
-# Kept so /admin/content is not a dead end for an administrator who looks for
-# content where Drupal usually keeps it.
+# Polls are the content of this site, so the listing belongs under Content
+# rather than in a section of its own. The tab on /admin/content and the entry
+# in Gin's sidebar both follow from this parent.
 entity.voting_question.collection:
   title: 'Polls'
   description: 'Create and manage polls.'
@@ -27,13 +17,13 @@ entity.voting_question.collection:
 drupal_simple_voting.settings:
   title: 'Voting settings'
   description: 'Open or close voting site-wide.'
-  parent: drupal_simple_voting.admin
+  parent: system.admin_config_workflow
   route_name: drupal_simple_voting.settings
   weight: 0
 
 drupal_simple_voting.docs:
   title: 'API docs'
   description: 'Browse and try the voting endpoints.'
-  parent: drupal_simple_voting.admin
+  parent: system.admin_config_workflow
   route_name: drupal_simple_voting.docs
   weight: 1

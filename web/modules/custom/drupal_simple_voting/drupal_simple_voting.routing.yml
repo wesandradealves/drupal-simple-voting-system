@@ -81,6 +81,12 @@ drupal_simple_voting.docs:
     _title: 'Voting API'
   requirements:
     _permission: 'access content'
+  options:
+    # The page is public, and an API consumer reading it gets the site theme.
+    # An administrator arriving from the menu gets the administration theme
+    # instead, so the reference does not open the public header inside the
+    # admin frame.
+    _admin_route: TRUE
 
 drupal_simple_voting.openapi:
   path: '/docs/openapi.json'

@@ -32,8 +32,13 @@ lando install    # install/repair the site (idempotent — safe to re-run)
 4. **uninstalls `node`** — the domain uses custom content entities, so core's node module is not wanted;
 5. declares the `config/sync` directory in `settings.php`;
 6. enables `drupal_simple_voting`;
-7. installs **Olivero** (default theme) and **Gin** + `gin_toolbar` (admin theme);
-8. rebuilds caches and prints a one-time login link (`drush user:login`).
+7. installs and selects **Olivero** (default theme) and **Gin** (admin theme);
+8. installs the core modules the `minimal` profile leaves out —
+   `field_ui views views_ui menu_ui menu_link_content block_content path config contextual help options datetime link editor ckeditor5 big_pipe automated_cron announcements_feed` —
+   the `standard` profile's module set **minus `node` and `taxonomy`** (`node` because the brief forbids it,
+   `taxonomy` because it depends on `node` and would drag it back in). Without them the administration has no
+   Views, no field UI, no menu management and no block types. Then enables **`gin_toolbar`**;
+9. rebuilds caches and prints a one-time login link (`drush user:login`).
 
 ## Database dump
 
@@ -122,15 +127,27 @@ no horizontal scroll either way.
 
 ## Admin pages
 
-All under the Gin admin theme. Reachable by the administrator only.
+All served under the Gin admin theme. Every one is reachable through the interface, so none of the paths
+below has to be typed by hand:
+
+- **Gin sidebar.** The shortcuts block at the top of the sidebar carries **Polls**, next to **Blocks** and
+  **Files**. Gin builds that block from a fixed list of entity types (content, blocks, files, media) and never
+  reads the menu, so a menu link alone would not reach it; the module injects the item with
+  `hook_preprocess_menu_region__middle()` in `drupal_simple_voting.module`, and only when the current user can
+  open the poll collection.
+- **Content tab.** `/admin/content` gains a **Polls** tab (local task), beside Content, Blocks and Files.
+- **Listing actions.** The poll listing offers two action buttons: **+ Add poll** and **+ Voting settings**.
+- **Row operations.** Each row carries the split-button **Edit**, with **Delete** and **View** in its dropdown.
+- **Configuration → Workflow.** Holds **Voting settings** and **API docs**.
 
 | Path | What it does |
 | --- | --- |
 | `/admin/content/polls` | Poll listing (Poll, Open, Options, Votes, Operations) |
-| `/admin/content/polls/add` | Create a poll **with its options on the same screen** (title, description, image upload, draggable weight, add/remove rows) |
+| `/admin/content/polls/add` | Create a poll **with its options on the same screen** (title, description, image upload — **2 MB limit, resized above 1024×1024** — draggable weight, add/remove rows) |
 | `/admin/content/polls/{id}/edit` | Edit a poll and its options |
 | `/admin/content/polls/{id}/delete` | Delete a poll |
 | `/admin/config/voting` | Global switch — turn voting on/off across the whole site (CMS and API) |
+| `/docs` | Swagger UI — the menu entry **Configuration → Workflow → API docs**. A public page, but an administrator arriving from the menu sees it in the admin theme (`_admin_route`) |
 | `/admin/reports/dblog` | Audit trail — filter by the `drupal_simple_voting` log channel |
 
 ## Poll list block
@@ -197,6 +214,9 @@ curl -s -X POST "$BASE/api/v1/polls/<uuid>/vote" \
 
 - **`/docs`** — a Swagger UI page served by the module itself. The UI assets come from
   `web/libraries/swagger-ui`, copied there by a Composer script (`install-swagger-ui-library`).
+- **Public page, admin-aware theme.** The route is flagged `_admin_route`: an anonymous consumer reads it in
+  the public theme, while an administrator who opens it from **Configuration → Workflow → API docs** gets the
+  same page in the admin theme, instead of the public header rendered inside the admin frame.
 - **`/docs/openapi.json`** — an **OpenAPI 3.1** document generated in PHP from the module's real routes. It is
   not a hand-maintained YAML that drifts out of sync.
 - Both pages are provided by the module, so they **return `404` once the module is uninstalled**.
@@ -276,7 +296,9 @@ at install — removes the `voter` role, deletes the demo account and the seed v
 
 Composer manages everything under `web/`.
 
-- **Module dependency:** core `image` only.
+- **Module dependencies:** core `image` and core `toolbar`. `toolbar` is required because the module ships
+  menu links, an action link and local tasks; without core's toolbar there is no menu bar to display them and
+  each admin page could only be reached by typing its URL.
 - **Contrib:** `drupal/gin` (^5.0) and `drupal/gin_toolbar` (^3.0) — the admin theme.
 - **Front-end libraries**, vendored into `web/libraries/` by Composer scripts (`post-install-cmd` /
   `post-update-cmd`):
