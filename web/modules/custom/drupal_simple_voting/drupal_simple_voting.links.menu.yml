@@ -5,8 +5,19 @@ drupal_simple_voting.polls:
   route_name: drupal_simple_voting.polls
   weight: -10
 
-# The site runs without node, so /admin/content would otherwise render an empty
-# page: the collection needs a menu link there, not only the local task.
+# Its own section in the admin menu instead of a child of Content. The toolbar
+# only renders the top level, so anything nested under Content is invisible
+# until the administrator guesses to click through — and this site has no
+# nodes, which makes polls its content rather than a corner of it.
+drupal_simple_voting.admin:
+  title: 'Polls'
+  description: 'Create and manage polls.'
+  parent: system.admin
+  route_name: entity.voting_question.collection
+  weight: -8
+
+# Kept so /admin/content is not a dead end for an administrator who looks for
+# content where Drupal usually keeps it.
 entity.voting_question.collection:
   title: 'Polls'
   description: 'Create and manage polls.'
@@ -14,14 +25,15 @@ entity.voting_question.collection:
   route_name: entity.voting_question.collection
 
 drupal_simple_voting.settings:
-  title: 'Voting'
+  title: 'Voting settings'
   description: 'Open or close voting site-wide.'
-  parent: system.admin_config_workflow
+  parent: drupal_simple_voting.admin
   route_name: drupal_simple_voting.settings
+  weight: 0
 
 drupal_simple_voting.docs:
-  title: 'Voting API'
+  title: 'API docs'
   description: 'Browse and try the voting endpoints.'
-  parent: system.admin_config_workflow
+  parent: drupal_simple_voting.admin
   route_name: drupal_simple_voting.docs
   weight: 1

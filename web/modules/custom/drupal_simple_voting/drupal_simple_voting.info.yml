@@ -7,3 +7,7 @@ core_version_requirement: ^11
 configure: drupal_simple_voting.settings
 dependencies:
   - drupal:image
+  # The module ships admin menu links, an action link and local tasks. Without
+  # core's toolbar there is no menu bar to show them in, and every admin page
+  # has to be reached by typing its URL.
+  - drupal:toolbar

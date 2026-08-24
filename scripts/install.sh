@@ -179,9 +179,16 @@ log_step "Installing and selecting the themes"
 "$DRUSH" theme:install gin -y
 "$DRUSH" config:set system.theme default olivero -y
 "$DRUSH" config:set system.theme admin gin -y
-# gin_toolbar declares no dependency on core's toolbar, so without this the
-# admin has no menu bar at all and every page has to be reached by URL.
-"$DRUSH" pm:install toolbar -y
+# The minimal profile leaves the administration gutted: no Views, no field UI,
+# no menu management, no block types. A reviewer opening this site would find
+# half of Drupal missing. This is the standard profile's module set minus node
+# and taxonomy — node because the brief forbids it, taxonomy because it depends
+# on node and would drag it back in.
+"$DRUSH" pm:install \
+  field_ui views views_ui menu_ui menu_link_content block_content \
+  path config contextual help options datetime link \
+  editor ckeditor5 big_pipe automated_cron announcements_feed -y
+
 "$DRUSH" pm:install gin_toolbar -y
 
 log_step "Rebuilding the caches"
