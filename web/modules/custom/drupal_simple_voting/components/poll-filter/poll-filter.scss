@@ -27,10 +27,7 @@
 .vt-filter__submit {
   height: var(--vt-filter-control-height);
   box-sizing: border-box;
-  border-radius: var(--vt-default-option-radius);
-  font-family: inherit;
   font-size: 0.875rem;
-  line-height: 1.2;
 }
 
 .vt-filter__select {
@@ -38,22 +35,15 @@
   // Room on the trailing edge for the arrow the theme paints.
   padding: 0 32px 0 10px;
   border: 1px solid var(--vt-option-border-color);
+  border-radius: var(--vt-default-option-radius);
   background-color: var(--vt-default-background-color);
+  font-family: inherit;
+  line-height: 1.2;
   color: inherit;
 }
 
 .vt-filter__submit {
   padding: 0 16px;
-  border: 1px solid transparent;
-  background-color: rgba(var(--vt-primary-color), 1);
-  color: rgba(255, 255, 255, 1);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.vt-filter__submit:hover,
-.vt-filter__submit:focus-visible {
-  background-color: rgba(var(--vt-primary-color), 0.85);
 }
 
 // A narrow region has no room for three controls side by side, so each one

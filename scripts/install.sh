@@ -5,8 +5,6 @@ PROJECT_ROOT="${LANDO_MOUNT:-/app}"
 DRUSH="vendor/bin/drush"
 SETTINGS_FILE="web/sites/default/settings.php"
 FILES_DIR="web/sites/default/files"
-BOOTSTRAP_CSS="web/libraries/bootstrap/dist/css/bootstrap.min.css"
-BOOTSTRAP_JS="web/libraries/bootstrap/dist/js/bootstrap.bundle.min.js"
 MODULE_NAME="drupal_simple_voting"
 MODULE_INFO="web/modules/custom/${MODULE_NAME}/${MODULE_NAME}.info.yml"
 CONFIG_SYNC_LINE="\$settings['config_sync_directory'] = '../config/sync';"
@@ -89,15 +87,6 @@ else
   log_detail "No composer.lock found, resolving dependencies and generating it."
   composer update --no-interaction --no-progress
 fi
-
-log_step "Verifying the Bootstrap library assets"
-if [ ! -f "$BOOTSTRAP_CSS" ] || [ ! -f "$BOOTSTRAP_JS" ]; then
-  log_detail "Assets are missing, running the install-bootstrap-library script."
-  composer run-script install-bootstrap-library
-fi
-[ -f "$BOOTSTRAP_CSS" ] || abort "Missing ${BOOTSTRAP_CSS}. The module would load without Bootstrap and the browser would only report a silent 404."
-[ -f "$BOOTSTRAP_JS" ] || abort "Missing ${BOOTSTRAP_JS}. The module would load without Bootstrap and the browser would only report a silent 404."
-log_detail "Bootstrap CSS and JS are in place."
 
 log_step "Verifying the voting module"
 [ -f "$MODULE_INFO" ] || abort "Missing ${MODULE_INFO}."

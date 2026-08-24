@@ -23,8 +23,7 @@
         "drupal/gin": "^5.0",
         "drupal/gin_toolbar": "^3.0",
         "drush/drush": "^13.7",
-        "swagger-api/swagger-ui": "^5.32",
-        "twbs/bootstrap": "^5.3"
+        "swagger-api/swagger-ui": "^5.32"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -46,15 +45,10 @@
         "sort-packages": true
     },
     "scripts": {
-        "install-bootstrap-library": [
-            "mkdir -p web/libraries/bootstrap/dist && cp -R vendor/twbs/bootstrap/dist/. web/libraries/bootstrap/dist/"
-        ],
         "post-install-cmd": [
-            "@install-bootstrap-library",
             "@install-swagger-ui-library"
         ],
         "post-update-cmd": [
-            "@install-bootstrap-library",
             "@install-swagger-ui-library"
         ],
         "install-swagger-ui-library": [

@@ -2,6 +2,7 @@
   --vt-primary-color: 67, 151, 247;
   --vt-font-color: 0, 0, 0;
   --vt-danger-color: 226, 32, 36;
+  --vt-on-primary-color: 255, 255, 255;
   --vt-card-horizontal-padding: 24px;
   --vt-card-vertical-padding: 40px;
   --vt-default-item-gap: 24px;
@@ -27,18 +28,29 @@
   --vt-easing: ease;
 }
 
-:root {
-  --bs-primary: var(--vt-option-border);
-  --bs-primary-rgb: var(--vt-brand-rgb);
-  --bs-body-color: var(--vt-fg);
-  --bs-body-color-rgb: var(--vt-ink-rgb);
-  --bs-body-bg: var(--vt-bg);
-  --bs-body-bg-rgb: var(--vt-paper-rgb);
-  --bs-danger: var(--vt-danger);
-  --bs-danger-rgb: var(--vt-danger-rgb);
-  --bs-border-color: var(--vt-option-border);
-  --bs-border-radius: var(--vt-option-radius);
-  --bs-font-sans-serif: var(--vt-font-ui);
+.vt-action {
+  display: inline-block;
+  border: 1px solid transparent;
+  border-radius: var(--vt-default-option-radius);
+  background-color: rgba(var(--vt-primary-color), 1);
+  color: rgba(var(--vt-on-primary-color), 1);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.vt-action:hover,
+.vt-action:active {
+  background-color: rgba(var(--vt-primary-color), 0.85);
+  color: rgba(var(--vt-on-primary-color), 1);
+  text-decoration: none;
+}
+
+.vt-action:focus-visible {
+  outline: 2px solid rgba(var(--vt-font-color), 1);
+  outline-offset: 2px;
 }
 
 @keyframes vt-barfill {

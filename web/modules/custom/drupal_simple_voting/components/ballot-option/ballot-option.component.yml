@@ -5,12 +5,8 @@ description: A single answer choice with thumbnail, title and short description.
 props:
   type: object
   required:
-    - option_id
     - title
   properties:
-    option_id:
-      type: [string, integer]
-      title: Option identifier
     input_id:
       type: string
       title: DOM id of the radio input this row controls

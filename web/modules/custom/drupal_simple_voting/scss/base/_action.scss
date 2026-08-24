@@ -1,0 +1,30 @@
+// The module's own button, shared by the ballot submit, the listing filter and
+// the vote-status call to action. It carries the module identity so the button
+// does not inherit the active theme's button styling.
+.vt-action {
+  display: inline-block;
+  border: 1px solid transparent;
+  border-radius: var(--vt-default-option-radius);
+  background-color: rgba(var(--vt-primary-color), 1);
+  color: rgba(var(--vt-on-primary-color), 1);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.vt-action:hover,
+.vt-action:active {
+  background-color: rgba(var(--vt-primary-color), 0.85);
+  color: rgba(var(--vt-on-primary-color), 1);
+  text-decoration: none;
+}
+
+// A real focus ring, offset so it clears the fill and stays visible over both
+// the resting and the darkened background. The bare background shift the theme
+// applies on its own is too weak to read as focus.
+.vt-action:focus-visible {
+  outline: 2px solid rgba(var(--vt-font-color), 1);
+  outline-offset: 2px;
+}

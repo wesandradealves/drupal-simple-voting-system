@@ -5,16 +5,9 @@ description: The card that frames one question, its options and the vote action.
 props:
   type: object
   properties:
-    question_title:
-      type: string
-      title: The question itself
     question_description:
       type: string
       title: Optional supporting text
-    heading_level:
-      type: string
-      title: Heading element for the question
-      enum: [h1, h2, h3]
     total_votes:
       type: integer
       title: Total votes cast in this question
