@@ -1,11 +1,11 @@
 drupal_simple_voting:
-  version: 1.4.0
+  version: 1.5.0
   css:
     theme:
       css/voting.css: {}
 
 swagger:
-  version: 1.4.0
+  version: 1.5.0
   css:
     base:
       /libraries/swagger-ui/dist/swagger-ui.css: { minified: true }
@@ -20,7 +20,7 @@ swagger:
     - core/once
 
 admin:
-  version: 1.4.0
+  version: 1.5.0
   css:
     theme:
       css/admin.css: {}
