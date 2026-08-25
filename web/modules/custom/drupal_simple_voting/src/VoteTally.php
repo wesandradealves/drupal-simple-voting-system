@@ -11,6 +11,9 @@ use Drupal\Core\Database\Connection;
  */
 final class VoteTally {
 
+  /**
+   * Injects the database connection the tally query runs on.
+   */
   public function __construct(private readonly Connection $database) {}
 
   /**

@@ -62,6 +62,9 @@ final class OptionRowSet {
    */
   private ?EntityFormDisplayInterface $optionDisplay = NULL;
 
+  /**
+   * Binds the row set to the option set service and the poll being edited.
+   */
   public function __construct(VotingOptionSetSynchronizer $option_set, VotingQuestionInterface $question) {
     $this->optionSet = $option_set;
     $this->question = $question;

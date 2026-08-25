@@ -22,6 +22,10 @@ use Drupal\drupal_simple_voting\VotingQuestionInterface;
  */
 final class PollSerializer {
 
+  /**
+   * Injects the storage, tally, policy and ballot box the serialiser reads,
+   * and the file URL generator that turns option images into absolute URLs.
+   */
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly VoteTally $tally,
@@ -32,6 +36,8 @@ final class PollSerializer {
   ) {}
 
   /**
+   * The public shape of one question, without its options.
+   *
    * @param bool|null $has_voted
    *   Whether this elector already voted, when a caller serialising a whole
    *   listing has already read it in one query. Left null, a single-question
@@ -72,6 +78,8 @@ final class PollSerializer {
   }
 
   /**
+   * The question with its options, for the ballot screen.
+   *
    * @return array<string, mixed>
    */
   public function detail(VotingQuestionInterface $question, AccountInterface $account): array {
@@ -84,6 +92,9 @@ final class PollSerializer {
   }
 
   /**
+   * The result payload: every option with the elector's own pick marked, and
+   * the tally folded in only when the policy allows revealing it.
+   *
    * @return array<string, mixed>
    */
   public function results(VotingQuestionInterface $question, AccountInterface $account): array {
@@ -120,12 +131,19 @@ final class PollSerializer {
   }
 
   /**
+   * The question's options in display order.
+   *
    * @return array<int, \Drupal\drupal_simple_voting\VotingOptionInterface>
    */
   public function options(VotingQuestionInterface $question): array {
     return $this->optionSet->orderedForQuestion($question);
   }
 
+  /**
+   * The question carrying this UUID, or null when none does.
+   *
+   * The API addresses questions by their UUID, never by the sequential id.
+   */
   public function loadByUuid(string $uuid): ?VotingQuestionInterface {
     $storage = $this->entityTypeManager->getStorage('voting_question');
     $found = $storage->loadByProperties(['uuid' => $uuid]);
@@ -134,6 +152,9 @@ final class PollSerializer {
     return $question instanceof VotingQuestionInterface ? $question : NULL;
   }
 
+  /**
+   * The option carrying this UUID, or null when none does.
+   */
   public function loadOptionByUuid(string $uuid): ?VotingOptionInterface {
     $storage = $this->entityTypeManager->getStorage('voting_option');
     $found = $storage->loadByProperties(['uuid' => $uuid]);
@@ -143,6 +164,8 @@ final class PollSerializer {
   }
 
   /**
+   * The public shape of one option.
+   *
    * @return array<string, mixed>
    */
   private function option(VotingOptionInterface $option): array {
@@ -154,6 +177,9 @@ final class PollSerializer {
     ];
   }
 
+  /**
+   * The absolute URL of an option's image, or null when it has none.
+   */
   private function imageUrl(VotingOptionInterface $option): ?string {
     if (!$option->hasImage()) {
       return NULL;

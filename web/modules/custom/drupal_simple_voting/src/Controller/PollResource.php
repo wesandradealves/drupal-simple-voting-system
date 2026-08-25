@@ -19,11 +19,26 @@ final class PollResource extends ApiResource {
 
   use AutowireTrait;
 
+  /**
+   * Injects the serializer that shapes the payload and the voting policy.
+   *
+   * @param \Drupal\drupal_simple_voting\PollSerializer $serializer
+   *   Loads questions by UUID and turns them into JSON-ready arrays.
+   * @param \Drupal\drupal_simple_voting\VotingPolicy $policy
+   *   Supplies the per-question cacheability metadata.
+   */
   public function __construct(
     private readonly PollSerializer $serializer,
     private readonly VotingPolicy $policy,
   ) {}
 
+  /**
+   * GET /api/v1/polls: lists every poll the caller may see.
+   *
+   * Returns 200 with '{"data": [...]}', open polls first then newest first.
+   * The response varies by user and depends on the question list cache tags
+   * and the voting settings.
+   */
   public function collection(): CacheableJsonResponse {
     $storage = $this->entityTypeManager()->getStorage('voting_question');
     $ids = $storage->getQuery()
@@ -48,6 +63,13 @@ final class PollResource extends ApiResource {
     return $response;
   }
 
+  /**
+   * GET /api/v1/polls/{uuid}: reads one poll with its options.
+   *
+   * Returns 404 when no poll carries that UUID, otherwise 200 with
+   * '{"data": ...}'. The response varies by user and depends on the poll's
+   * cacheability plus the option list cache tags.
+   */
   public function item(string $uuid): JsonResponse {
     $question = $this->serializer->loadByUuid($uuid);
     if ($question === NULL) {

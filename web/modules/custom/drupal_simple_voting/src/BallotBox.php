@@ -17,6 +17,10 @@ use Drupal\drupal_simple_voting\Exception\VotingClosedException;
  */
 final class BallotBox {
 
+  /**
+   * Injects the vote storage, the policy that guards each cast and the audit
+   * log that records every outcome.
+   */
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly VotingPolicy $policy,
@@ -136,6 +140,9 @@ final class BallotBox {
     return $voted;
   }
 
+  /**
+   * The storage handler for voting_vote entities.
+   */
   private function voteStorage(): EntityStorageInterface {
     return $this->entityTypeManager->getStorage('voting_vote');
   }

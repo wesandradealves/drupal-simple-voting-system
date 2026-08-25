@@ -66,4 +66,16 @@ function drupal_simple_voting_preprocess_menu_region__middle(array &$variables):
     'class' => 'polls',
     'url' => $url->toString(),
   ];
+
+  // The kill switch rides in the same sidebar block, right beside the polls it
+  // closes. Its route lives under Configuration, but an administrator manages
+  // the polls from here and expects to open or close voting from here too.
+  $settings_url = Url::fromRoute('drupal_simple_voting.settings');
+  if ($settings_url->access()) {
+    $variables['items']['voting_settings'] = [
+      'title' => t('Voting settings'),
+      'class' => 'voting-settings',
+      'url' => $settings_url->toString(),
+    ];
+  }
 }

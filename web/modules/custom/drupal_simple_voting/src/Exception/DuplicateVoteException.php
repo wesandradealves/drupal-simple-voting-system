@@ -12,6 +12,9 @@ namespace Drupal\drupal_simple_voting\Exception;
  */
 final class DuplicateVoteException extends \RuntimeException {
 
+  /**
+   * Builds the exception with a default message, overridable by the caller.
+   */
   public function __construct(string $message = 'This elector has already voted on this question.', int $code = 0, ?\Throwable $previous = NULL) {
     parent::__construct($message, $code, $previous);
   }

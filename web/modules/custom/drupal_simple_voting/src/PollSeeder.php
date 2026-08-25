@@ -50,6 +50,10 @@ final class PollSeeder implements ContainerInjectionInterface {
    */
   private const SPACING = 86400;
 
+  /**
+   * Injects the storage, file system, module list, state and clock the seed
+   * needs to create sample content and remember which accounts it created.
+   */
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly FileSystemInterface $fileSystem,
@@ -92,6 +96,10 @@ final class PollSeeder implements ContainerInjectionInterface {
     $this->state->delete(self::SEEDED_USERS_KEY);
   }
 
+  /**
+   * Reads and decodes data/seed.json, returning null when it is missing or not
+   * valid JSON.
+   */
   private function readSeedData(): ?array {
     $path = $this->moduleList->getPath('drupal_simple_voting') . '/data/seed.json';
     if (!is_readable($path)) {
@@ -104,6 +112,9 @@ final class PollSeeder implements ContainerInjectionInterface {
   }
 
   /**
+   * Creates the sample voters that do not exist yet, recording their names in
+   * state so uninstall can remove exactly the accounts this seed added.
+   *
    * @return \Drupal\user\UserInterface[]
    */
   private function seedUsers(array $rows): array {
@@ -142,6 +153,9 @@ final class PollSeeder implements ContainerInjectionInterface {
   }
 
   /**
+   * Creates the sample questions and their options, skipping any title already
+   * present so a re-run does not duplicate them.
+   *
    * @return \Drupal\drupal_simple_voting\VotingQuestionInterface[]
    */
   private function seedPolls(array $rows): array {

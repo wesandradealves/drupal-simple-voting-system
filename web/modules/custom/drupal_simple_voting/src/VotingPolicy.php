@@ -25,6 +25,10 @@ final class VotingPolicy {
 
   public const VIEW_RESULTS_PERMISSION = 'view poll results';
 
+  /**
+   * Injects the config that carries the kill switch and the storage used to
+   * check whether an elector already holds a ballot.
+   */
   public function __construct(
     private readonly ConfigFactoryInterface $configFactory,
     private readonly EntityTypeManagerInterface $entityTypeManager,

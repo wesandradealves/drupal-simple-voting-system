@@ -24,6 +24,20 @@ final class VotingController extends ControllerBase {
 
   use AutowireTrait;
 
+  /**
+   * Injects the voting services the page relies on.
+   *
+   * @param \Drupal\drupal_simple_voting\VotingPolicy $policy
+   *   Decides whether a ballot or the result is shown, and supplies cacheability.
+   * @param \Drupal\drupal_simple_voting\VoteTally $tally
+   *   Counts the votes per option.
+   * @param \Drupal\drupal_simple_voting\BallotBox $ballotBox
+   *   Reads the current user's vote for a question.
+   * @param \Drupal\drupal_simple_voting\PollIndex $pollIndex
+   *   Builds the public index of questions.
+   * @param \Drupal\drupal_simple_voting\VotingOptionSetSynchronizer $optionSet
+   *   Yields a question's options in display order.
+   */
   public function __construct(
     private readonly VotingPolicy $policy,
     private readonly VoteTally $tally,
@@ -32,6 +46,12 @@ final class VotingController extends ControllerBase {
     private readonly VotingOptionSetSynchronizer $optionSet,
   ) {}
 
+  /**
+   * Title callback for the canonical question route.
+   *
+   * @return string
+   *   The question title, used as the page title.
+   */
   public function title(VotingQuestionInterface $voting_question): string {
     return $voting_question->getTitle();
   }
@@ -105,7 +125,14 @@ final class VotingController extends ControllerBase {
   }
 
   /**
+   * Builds the result render array: status notice plus one row per option.
+   *
+   * Each row carries its vote count and its share of the total, and marks the
+   * option the current user chose. Totals are only exposed when the question
+   * reveals them.
+   *
    * @param array<int, array<string, mixed>> $options
+   *   The question options as returned by optionRows().
    */
   private function buildResults(VotingQuestionInterface $question, array $options, ?int $chosen): array {
     $counts = $this->tally->countsFor($question);
@@ -177,6 +204,11 @@ final class VotingController extends ControllerBase {
     return $rows;
   }
 
+  /**
+   * The option image as a themeable render array, or NULL when there is none.
+   *
+   * Carries the file's own cache tags so the image invalidates with the file.
+   */
   private function optionImage(VotingOptionInterface $option): ?array {
     if (!$option->hasImage()) {
       return NULL;
