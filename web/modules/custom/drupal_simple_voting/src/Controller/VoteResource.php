@@ -24,12 +24,31 @@ final class VoteResource extends ApiResource {
 
   use AutowireTrait;
 
+  /**
+   * Injects the serializer, the ballot writer and the voting policy.
+   *
+   * @param \Drupal\drupal_simple_voting\PollSerializer $serializer
+   *   Loads the question and option by UUID and builds the results payload.
+   * @param \Drupal\drupal_simple_voting\BallotBox $ballotBox
+   *   Writes the ballot, the same service the CMS form uses.
+   * @param \Drupal\drupal_simple_voting\VotingPolicy $policy
+   *   Decides whether the current user may vote on the question.
+   */
   public function __construct(
     private readonly PollSerializer $serializer,
     private readonly BallotBox $ballotBox,
     private readonly VotingPolicy $policy,
   ) {}
 
+  /**
+   * POST /api/v1/polls/{uuid}/vote: registers one ballot.
+   *
+   * Validates in a deliberate order: 404 when the poll is unknown, 403 when the
+   * policy forbids voting (poll closed or voting off site-wide), 400 when the
+   * JSON body lacks a string option_id, 422 when the option belongs to another
+   * poll. The write is delegated to BallotBox, which yields 409 on a duplicate
+   * vote or 201 with the fresh results on success.
+   */
   public function cast(Request $request, string $uuid): JsonResponse {
     $question = $this->serializer->loadByUuid($uuid);
     if ($question === NULL) {

@@ -9,6 +9,9 @@ namespace Drupal\drupal_simple_voting\Exception;
  */
 final class VotingClosedException extends \RuntimeException {
 
+  /**
+   * Builds the exception with a default message, overridable by the caller.
+   */
   public function __construct(string $message = 'Voting is closed for this question.', int $code = 0, ?\Throwable $previous = NULL) {
     parent::__construct($message, $code, $previous);
   }

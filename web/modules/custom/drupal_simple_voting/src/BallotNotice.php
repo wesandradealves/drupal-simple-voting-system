@@ -15,18 +15,30 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  */
 final class BallotNotice {
 
+  /**
+   * The notice shown when the poll is closed.
+   */
   public static function closed(): TranslatableMarkup {
     return new TranslatableMarkup('This poll is closed.');
   }
 
+  /**
+   * The notice shown when the elector has already voted.
+   */
   public static function alreadyVoted(): TranslatableMarkup {
     return new TranslatableMarkup('You have already voted in this poll.');
   }
 
+  /**
+   * The notice confirming the ballot was recorded.
+   */
   public static function recorded(): TranslatableMarkup {
     return new TranslatableMarkup('Your vote was recorded.');
   }
 
+  /**
+   * The notice shown when the elector may not vote in this poll.
+   */
   public static function notAllowed(): TranslatableMarkup {
     return new TranslatableMarkup('You are not allowed to vote in this poll.');
   }

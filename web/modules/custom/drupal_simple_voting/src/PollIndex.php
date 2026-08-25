@@ -39,6 +39,10 @@ final class PollIndex {
 
   private const SORTS = ['newest' => 'DESC', 'oldest' => 'ASC'];
 
+  /**
+   * Injects the storage, policy and ballot box the listing reads from, plus the
+   * request stack that carries the reader's filter and sort choices.
+   */
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly VotingPolicy $policy,
@@ -48,6 +52,9 @@ final class PollIndex {
   ) {}
 
   /**
+   * Builds the render array for the poll listing: the filter control, one card
+   * per question, an empty state, and an optional pager.
+   *
    * @param int $per_page
    *   How many polls to show before a pager. Zero lists every poll.
    * @param int $pager_element
@@ -172,6 +179,9 @@ final class PollIndex {
     return isset(self::SORTS[$value]) ? $value : 'newest';
   }
 
+  /**
+   * The query bag of the current request, empty when there is no request.
+   */
   private function currentQuery(): InputBag {
     $request = $this->requestStack->getCurrentRequest();
 

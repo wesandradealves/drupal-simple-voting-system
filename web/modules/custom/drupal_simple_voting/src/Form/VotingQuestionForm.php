@@ -51,6 +51,9 @@ final class VotingQuestionForm extends ContentEntityForm {
    */
   private ?OptionRowSet $optionRows = NULL;
 
+  /**
+   * Extends the content entity form with the option set synchronizer.
+   */
   public function __construct(
     EntityRepositoryInterface $entity_repository,
     EntityTypeBundleInfoInterface $entity_type_bundle_info,

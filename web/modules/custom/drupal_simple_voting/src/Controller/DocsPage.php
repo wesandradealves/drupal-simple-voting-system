@@ -19,6 +19,12 @@ use Drupal\Core\Url;
  */
 final class DocsPage extends ControllerBase {
 
+  /**
+   * The /docs page: an empty container the Swagger UI library mounts into.
+   *
+   * Passes the OpenAPI spec URL and the CSRF token URL to the front-end
+   * through drupalSettings.
+   */
   public function render(): array {
     return [
       '#type' => 'html_tag',
@@ -36,6 +42,11 @@ final class DocsPage extends ControllerBase {
     ];
   }
 
+  /**
+   * Serves the OpenAPI document as JSON.
+   *
+   * Varies by site URL because the server entry is resolved at runtime.
+   */
   public function spec(): CacheableJsonResponse {
     $response = new CacheableJsonResponse($this->document());
     $cacheability = new CacheableMetadata();
@@ -46,6 +57,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * Assembles the full OpenAPI 3.1 document from its parts.
+   *
    * @return array<string, mixed>
    */
   private function document(): array {
@@ -66,6 +79,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * The OpenAPI 'info' block: title, version and description.
+   *
    * @return array<string, mixed>
    */
   private function apiInfo(): array {
@@ -80,6 +95,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * The two security schemes: the session cookie and the CSRF header token.
+   *
    * @return array<string, mixed>
    */
   private function securitySchemes(): array {
@@ -100,6 +117,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * The reusable component schemas: PollSummary, Option and Error.
+   *
    * @return array<string, mixed>
    */
   private function schemas(): array {
@@ -133,6 +152,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * The three read paths: list polls, read one poll, read its results.
+   *
    * @return array<string, mixed>
    */
   private function readPaths(): array {
@@ -184,6 +205,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * The write path: POST a vote, with its full set of response codes.
+   *
    * @return array<string, mixed>
    */
   private function votePath(): array {
@@ -221,6 +244,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * The shared {uuid} path parameter used by every per-poll path.
+   *
    * @return array<string, mixed>
    */
   private function uuidParameter(): array {
@@ -234,6 +259,8 @@ final class DocsPage extends ControllerBase {
   }
 
   /**
+   * A reusable OpenAPI response entry pointing at the Error schema.
+   *
    * @return array<string, mixed>
    */
   private function errorResponse(string $description): array {

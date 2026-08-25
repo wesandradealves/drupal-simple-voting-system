@@ -17,10 +17,16 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 abstract class ApiResource extends ControllerBase {
 
+  /**
+   * Builds the shared error body '{"error": message}' with the given status.
+   */
   protected function errorResponse(string $message, int $status): JsonResponse {
     return new JsonResponse(['error' => $message], $status);
   }
 
+  /**
+   * The canonical 404 for an unknown poll.
+   */
   protected function pollNotFound(): JsonResponse {
     return $this->errorResponse('Poll not found.', 404);
   }

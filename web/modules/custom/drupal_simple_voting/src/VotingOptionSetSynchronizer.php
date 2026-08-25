@@ -32,6 +32,9 @@ final class VotingOptionSetSynchronizer implements ContainerInjectionInterface {
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 
+  /**
+   * Injects the entity type manager that yields voting_option storage.
+   */
   public function __construct(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -122,6 +125,9 @@ final class VotingOptionSetSynchronizer implements ContainerInjectionInterface {
     }
   }
 
+  /**
+   * The storage handler for voting_option entities.
+   */
   private function optionStorage(): EntityStorageInterface {
     return $this->entityTypeManager->getStorage('voting_option');
   }

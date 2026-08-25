@@ -46,6 +46,9 @@ final class VotingAccessControlHandler extends EntityAccessControlHandler {
     return AccessResult::allowedIfHasPermission($account, VotingPolicy::ADMINISTER_PERMISSION);
   }
 
+  /**
+   * Routes a view check to the rule of the entity type being read.
+   */
   private function viewAccess(EntityInterface $entity, AccountInterface $account): AccessResultInterface {
     return match ($entity->getEntityTypeId()) {
       'voting_question' => $this->questionViewAccess($entity),

@@ -32,6 +32,10 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
    */
   private array $voteCounts = [];
 
+  /**
+   * Keeps the entity type manager for the aggregate count queries and their
+   * cache tags.
+   */
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityStorageInterface $storage,
@@ -42,6 +46,9 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * Resolves the question storage and the entity type manager from the
+   * container.
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): static {
     return new static(
@@ -53,6 +60,8 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * Adds the Open, Options and Votes columns before the default operations.
    */
   public function buildHeader(): array {
     $header['title'] = $this->t('Poll');
@@ -65,6 +74,9 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * Renders one poll row, reading the option and vote counts that ::load()
+   * prepared instead of querying per row.
    */
   public function buildRow(EntityInterface $entity): array {
     assert($entity instanceof VotingQuestionInterface);
@@ -81,6 +93,9 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * Loads the current page of questions, then fills the option and vote counts
+   * with one aggregate query each so ::buildRow() needs no per-row lookups.
    */
   public function load(): array {
     $questions = parent::load();
@@ -94,6 +109,9 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * Merges the option and vote list cache tags so the table rebuilds when a
+   * child of either type changes.
    */
   public function render(): array {
     $build = parent::render();
@@ -112,6 +130,8 @@ final class VotingQuestionListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * Orders the newest polls first and applies the pager when a limit is set.
    */
   protected function getEntityListQuery(): QueryInterface {
     $query = $this->getStorage()->getQuery()

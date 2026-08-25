@@ -26,6 +26,9 @@ final class BallotForm extends FormBase implements TrustedCallbackInterface {
 
   use AutowireTrait;
 
+  /**
+   * Injects the storage, the ballot box that casts votes and the voting policy.
+   */
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly BallotBox $ballotBox,
@@ -236,6 +239,9 @@ final class BallotForm extends FormBase implements TrustedCallbackInterface {
     }
   }
 
+  /**
+   * Reloads the question from its stored id, or NULL if it no longer exists.
+   */
   private function loadQuestion(FormStateInterface $form_state): ?VotingQuestionInterface {
     $question = $this->entityTypeManager
       ->getStorage('voting_question')
@@ -245,6 +251,8 @@ final class BallotForm extends FormBase implements TrustedCallbackInterface {
   }
 
   /**
+   * The state the vote-status component shows when the reader cannot vote.
+   *
    * @param array<int, array<string, mixed>> $ballot_options
    */
   private function ballotState(VotingQuestionInterface $question, array $ballot_options, bool $already_voted): string {
@@ -262,6 +270,8 @@ final class BallotForm extends FormBase implements TrustedCallbackInterface {
   }
 
   /**
+   * The message explaining why the reader cannot vote right now.
+   *
    * @param array<int, array<string, mixed>> $ballot_options
    */
   private function ballotNotice(VotingQuestionInterface $question, array $ballot_options, bool $already_voted): string {
