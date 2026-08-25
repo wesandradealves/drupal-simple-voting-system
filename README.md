@@ -9,6 +9,41 @@ Base URL of the dev site: `https://sistema-de-votacao.lndo.site`
 
 ---
 
+## Screenshots
+
+### Front-end
+
+![Public poll index](screenshots/front-polls-list.png)
+*The public poll index at `/polls` — filter by status, sort by date, one card per poll.*
+
+![Ballot](screenshots/front-ballot.png)
+*A single poll: the ballot, with image options and the module's own button.*
+
+![Results](screenshots/front-results.png)
+*A closed poll showing its tally — per-option bars, percentages and the total.*
+
+### Administration
+
+![Poll list](screenshots/admin-polls-list.png)
+*Polls live under Content, with an option count and a vote count per poll.*
+
+![Voting settings](screenshots/admin-voting-settings.png)
+*The site-wide kill switch (`Accept votes`), reachable from the Polls area of the admin menu.*
+
+![Add poll](screenshots/admin-poll-add.png)
+*Creating a poll and its image options on a single screen.*
+
+![Edit poll](screenshots/admin-poll-edit.png)
+*Editing a poll — options are reordered by dragging.*
+
+![Poll list block](screenshots/admin-block-place.png)
+*The Poll list block, placeable in any region, with a polls-per-page setting.*
+
+![Voter accounts](screenshots/admin-users.png)
+*The voter accounts created on install.*
+
+---
+
 ## Requirements
 
 - [Lando](https://lando.dev) 3.26 (Docker under the hood). Nothing else is installed on the host.
